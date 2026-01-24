@@ -11,6 +11,15 @@ import {
     PaymentMethod,
     CustomerSegment
 } from '@/types';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Search, UserPlus, ShoppingCart, CreditCard } from "lucide-react";
 
 export default function POSPage() {
     const router = useRouter();
@@ -212,7 +221,7 @@ export default function POSPage() {
             const data = await response.json();
             if (data.success) {
                 // Show success and reset form
-                alert(`Order created successfully!\nOrder Number: ${data.data.order_number}`);
+                alert(`Pesanan berhasil dibuat!\nNomor Pesanan: ${data.data.order_number}`);
                 resetForm();
             } else {
                 setError(data.error || 'Failed to create order');
@@ -250,451 +259,436 @@ export default function POSPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
-            <div className="max-w-6xl mx-auto">
-                {/* Header */}
-                <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-gray-900">Point of Sale</h1>
-                    <p className="text-gray-600 mt-1">Create new orders and process transactions</p>
-                </div>
+        <div>
+            <PageHeader
+                title="Kasir Point of Sale"
+                description="Buat pesanan baru dan proses transaksi"
+                breadcrumbs={[
+                    { label: 'Dashboard', href: '/admin/dashboard/operations' },
+                    { label: 'Kasir (POS)' }
+                ]}
+            />
 
+            <div className="max-w-6xl mx-auto">
                 {/* Progress Steps */}
-                <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-                    <div className="flex items-center justify-between">
-                        <div className={`flex items-center ${currentStep === 'customer' ? 'text-blue-600' : selectedCustomer ? 'text-green-600' : 'text-gray-400'}`}>
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep === 'customer' ? 'bg-blue-600 text-white' : selectedCustomer ? 'bg-green-600 text-white' : 'bg-gray-200'}`}>
-                                1
+                <Card className="mb-6">
+                    <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                            <div className={`flex items-center ${currentStep === 'customer' ? 'text-primary' : selectedCustomer ? 'text-green-600' : 'text-muted-foreground'}`}>
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center border ${currentStep === 'customer' ? 'bg-primary text-primary-foreground border-primary' : selectedCustomer ? 'bg-green-600 text-white border-green-600' : 'bg-muted text-muted-foreground'}`}>
+                                    <Search className="w-4 h-4" />
+                                </div>
+                                <span className="ml-2 font-medium hidden sm:inline">Pelanggan</span>
                             </div>
-                            <span className="ml-2 font-medium">Customer</span>
-                        </div>
-                        <div className="flex-1 h-1 mx-4 bg-gray-200">
-                            <div className={`h-full ${selectedCustomer ? 'bg-green-600' : 'bg-gray-200'}`} style={{ width: selectedCustomer ? '100%' : '0%' }} />
-                        </div>
-                        <div className={`flex items-center ${currentStep === 'order' ? 'text-blue-600' : selectedService ? 'text-green-600' : 'text-gray-400'}`}>
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep === 'order' ? 'bg-blue-600 text-white' : selectedService ? 'bg-green-600 text-white' : 'bg-gray-200'}`}>
-                                2
+                            <div className="flex-1 h-1 mx-4 bg-secondary">
+                                <div className={`h-full ${selectedCustomer ? 'bg-green-600' : 'bg-secondary'}`} style={{ width: selectedCustomer ? '100%' : '0%' }} />
                             </div>
-                            <span className="ml-2 font-medium">Order Details</span>
-                        </div>
-                        <div className="flex-1 h-1 mx-4 bg-gray-200">
-                            <div className={`h-full ${selectedService ? 'bg-green-600' : 'bg-gray-200'}`} style={{ width: selectedService ? '100%' : '0%' }} />
-                        </div>
-                        <div className={`flex items-center ${currentStep === 'payment' ? 'text-blue-600' : 'text-gray-400'}`}>
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep === 'payment' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>
-                                3
+                            <div className={`flex items-center ${currentStep === 'order' ? 'text-primary' : selectedService ? 'text-green-600' : 'text-muted-foreground'}`}>
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center border ${currentStep === 'order' ? 'bg-primary text-primary-foreground border-primary' : selectedService ? 'bg-green-600 text-white border-green-600' : 'bg-muted text-muted-foreground'}`}>
+                                    <ShoppingCart className="w-4 h-4" />
+                                </div>
+                                <span className="ml-2 font-medium hidden sm:inline">Detail</span>
                             </div>
-                            <span className="ml-2 font-medium">Payment</span>
+                            <div className="flex-1 h-1 mx-4 bg-secondary">
+                                <div className={`h-full ${selectedService ? 'bg-green-600' : 'bg-secondary'}`} style={{ width: selectedService ? '100%' : '0%' }} />
+                            </div>
+                            <div className={`flex items-center ${currentStep === 'payment' ? 'text-primary' : 'text-muted-foreground'}`}>
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center border ${currentStep === 'payment' ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted text-muted-foreground'}`}>
+                                    <CreditCard className="w-4 h-4" />
+                                </div>
+                                <span className="ml-2 font-medium hidden sm:inline">Pembayaran</span>
+                            </div>
                         </div>
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
 
                 {/* Error Message */}
                 {error && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-                        <p className="text-red-800">{error}</p>
+                    <div className="bg-destructive/10 border border-destructive/20 text-destructive rounded-lg p-4 mb-6">
+                        <p>{error}</p>
                     </div>
                 )}
 
                 {/* Step 1: Customer Selection */}
                 {currentStep === 'customer' && (
-                    <div className="bg-white rounded-lg shadow-sm p-6">
-                        <h2 className="text-xl font-semibold text-gray-900 mb-4">Select or Create Customer</h2>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Pilih Pesanan atau Buat Baru</CardTitle>
+                            <CardDescription>Cari pelanggan yang sudah ada atau daftarkan pelanggan baru</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {!showNewCustomerForm ? (
+                                <div className="space-y-6">
+                                    <div className="space-y-4">
+                                        <div className="relative">
+                                            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                            <Input
+                                                placeholder="Cari nama, telepon, atau ID pelanggan..."
+                                                value={customerSearch}
+                                                onChange={(e) => setCustomerSearch(e.target.value)}
+                                                className="pl-9"
+                                            />
+                                        </div>
 
-                        {!showNewCustomerForm ? (
-                            <>
-                                {/* Search */}
-                                <div className="mb-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Search Customer (Name, Phone, or Customer Number)
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={customerSearch}
-                                        onChange={(e) => setCustomerSearch(e.target.value)}
-                                        placeholder="Type to search..."
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    />
-                                </div>
-
-                                {/* Search Results */}
-                                {customers.length > 0 && (
-                                    <div className="mb-4 max-h-64 overflow-y-auto border border-gray-200 rounded-lg">
-                                        {customers.map((customer) => (
-                                            <button
-                                                key={customer.id}
-                                                onClick={() => {
-                                                    setSelectedCustomer(customer);
-                                                    setCurrentStep('order');
-                                                }}
-                                                className="w-full text-left p-4 hover:bg-blue-50 border-b border-gray-100 last:border-b-0 transition-colors"
-                                            >
-                                                <div className="font-medium text-gray-900">{customer.name}</div>
-                                                <div className="text-sm text-gray-600">
-                                                    {customer.customer_number} • {customer.phone || 'No phone'} • {customer.segment}
-                                                </div>
-                                            </button>
-                                        ))}
+                                        {customers.length > 0 && (
+                                            <div className="border rounded-md divide-y">
+                                                {customers.map((customer) => (
+                                                    <div
+                                                        key={customer.id}
+                                                        onClick={() => {
+                                                            setSelectedCustomer(customer);
+                                                            setCurrentStep('order');
+                                                        }}
+                                                        className="p-4 hover:bg-accent/50 cursor-pointer flex justify-between items-center transition-colors"
+                                                    >
+                                                        <div>
+                                                            <div className="font-medium">{customer.name}</div>
+                                                            <div className="text-sm text-muted-foreground">
+                                                                {customer.customer_number} • {customer.phone || '-'}
+                                                            </div>
+                                                        </div>
+                                                        <Badge variant="outline">{customer.segment}</Badge>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
-                                )}
 
-                                {/* New Customer Button */}
-                                <button
-                                    onClick={() => setShowNewCustomerForm(true)}
-                                    className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors"
-                                >
-                                    + Create New Customer
-                                </button>
-                            </>
-                        ) : (
-                            <>
-                                {/* New Customer Form */}
+                                    <div className="relative">
+                                        <div className="absolute inset-0 flex items-center">
+                                            <span className="w-full border-t" />
+                                        </div>
+                                        <div className="relative flex justify-center text-xs uppercase">
+                                            <span className="bg-background px-2 text-muted-foreground">Atau</span>
+                                        </div>
+                                    </div>
+
+                                    <Button
+                                        variant="outline"
+                                        className="w-full border-dashed py-6"
+                                        onClick={() => setShowNewCustomerForm(true)}
+                                    >
+                                        <UserPlus className="mr-2 h-4 w-4" />
+                                        Buat Pelanggan Baru
+                                    </Button>
+                                </div>
+                            ) : (
                                 <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Name <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={newCustomer.name}
-                                            onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                                            <input
-                                                type="tel"
-                                                value={newCustomer.phone}
-                                                onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    <div className="grid gap-4">
+                                        <div className="grid gap-2">
+                                            <Label>Nama Lengkap <span className="text-destructive">*</span></Label>
+                                            <Input
+                                                value={newCustomer.name}
+                                                onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
                                             />
                                         </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                                            <input
-                                                type="email"
-                                                value={newCustomer.email}
-                                                onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="grid gap-2">
+                                                <Label>Telepon</Label>
+                                                <Input
+                                                    type="tel"
+                                                    value={newCustomer.phone}
+                                                    onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
+                                                />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label>Email</Label>
+                                                <Input
+                                                    type="email"
+                                                    value={newCustomer.email}
+                                                    onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label>Alamat</Label>
+                                            <Textarea
+                                                value={newCustomer.address}
+                                                onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label>Segmen Pelanggan</Label>
+                                            <Select
+                                                value={newCustomer.segment}
+                                                onValueChange={(val) => setNewCustomer({ ...newCustomer, segment: val as CustomerSegment })}
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value={CustomerSegment.REGULAR}>Regular</SelectItem>
+                                                    <SelectItem value={CustomerSegment.VIP}>VIP</SelectItem>
+                                                    <SelectItem value={CustomerSegment.CORPORATE}>Corporate</SelectItem>
+                                                    <SelectItem value={CustomerSegment.DORMITORY}>Dormitory</SelectItem>
+                                                    <SelectItem value={CustomerSegment.HOTEL}>Hotel</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label>Catatan</Label>
+                                            <Textarea
+                                                value={newCustomer.notes}
+                                                onChange={(e) => setNewCustomer({ ...newCustomer, notes: e.target.value })}
                                             />
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
-                                        <textarea
-                                            value={newCustomer.address}
-                                            onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })}
-                                            rows={2}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Customer Segment</label>
-                                        <select
-                                            value={newCustomer.segment}
-                                            onChange={(e) => setNewCustomer({ ...newCustomer, segment: e.target.value as CustomerSegment })}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        >
-                                            <option value={CustomerSegment.REGULAR}>Regular</option>
-                                            <option value={CustomerSegment.VIP}>VIP</option>
-                                            <option value={CustomerSegment.CORPORATE}>Corporate</option>
-                                            <option value={CustomerSegment.DORMITORY}>Dormitory</option>
-                                            <option value={CustomerSegment.HOTEL}>Hotel</option>
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
-                                        <textarea
-                                            value={newCustomer.notes}
-                                            onChange={(e) => setNewCustomer({ ...newCustomer, notes: e.target.value })}
-                                            rows={2}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
-                                    </div>
-
-                                    <div className="flex gap-3">
-                                        <button
-                                            onClick={createCustomer}
-                                            disabled={isLoading}
-                                            className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
-                                        >
-                                            {isLoading ? 'Creating...' : 'Create Customer'}
-                                        </button>
-                                        <button
-                                            onClick={() => setShowNewCustomerForm(false)}
-                                            className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                                        >
-                                            Cancel
-                                        </button>
+                                    <div className="flex gap-3 pt-4">
+                                        <Button variant="outline" onClick={() => setShowNewCustomerForm(false)}>
+                                            Batal
+                                        </Button>
+                                        <Button onClick={createCustomer} disabled={isLoading} className="flex-1">
+                                            {isLoading ? 'Menyimpan...' : 'Simpan Pelanggan'}
+                                        </Button>
                                     </div>
                                 </div>
-                            </>
-                        )}
-                    </div>
+                            )}
+                        </CardContent>
+                    </Card>
                 )}
 
                 {/* Step 2: Order Details */}
                 {currentStep === 'order' && selectedCustomer && (
-                    <div className="space-y-6">
+                    <div className="grid gap-6">
                         {/* Customer Info Card */}
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                            <div className="flex justify-between items-start">
+                        <Card className="bg-primary/5 border-primary/20">
+                            <CardContent className="p-4 flex justify-between items-center">
                                 <div>
-                                    <h3 className="font-semibold text-blue-900">{selectedCustomer.name}</h3>
-                                    <p className="text-sm text-blue-700">
-                                        {selectedCustomer.customer_number} • {selectedCustomer.phone || 'No phone'}
-                                    </p>
+                                    <div className="font-semibold text-foreground">{selectedCustomer.name}</div>
+                                    <div className="text-sm text-muted-foreground">
+                                        {selectedCustomer.customer_number} • {selectedCustomer.phone || '-'}
+                                    </div>
                                 </div>
-                                <button
-                                    onClick={() => {
-                                        setSelectedCustomer(null);
-                                        setCurrentStep('customer');
-                                    }}
-                                    className="text-sm text-blue-600 hover:text-blue-800"
-                                >
-                                    Change
-                                </button>
-                            </div>
-                        </div>
+                                <Button variant="ghost" size="sm" onClick={() => {
+                                    setSelectedCustomer(null);
+                                    setCurrentStep('customer');
+                                }}>
+                                    Ganti
+                                </Button>
+                            </CardContent>
+                        </Card>
 
-                        {/* Order Form */}
-                        <div className="bg-white rounded-lg shadow-sm p-6">
-                            <h2 className="text-xl font-semibold text-gray-900 mb-4">Order Details</h2>
-
-                            <div className="space-y-4">
-                                {/* Service Selection */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Service <span className="text-red-500">*</span>
-                                    </label>
-                                    <select
-                                        value={selectedService?.id || ''}
-                                        onChange={(e) => {
-                                            const service = services.find(s => s.id === parseInt(e.target.value));
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Detail Pesanan</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="grid gap-2">
+                                    <Label>Layanan <span className="text-destructive">*</span></Label>
+                                    <Select
+                                        value={selectedService?.id?.toString() || ''}
+                                        onValueChange={(val) => {
+                                            const service = services.find(s => s.id === parseInt(val));
                                             setSelectedService(service || null);
                                             setOrderDetails({ ...orderDetails, unitType: service?.unit_type || UnitType.KG });
                                         }}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     >
-                                        <option value="">Select a service</option>
-                                        {services.map((service) => (
-                                            <option key={service.id} value={service.id}>
-                                                {service.service_name} - Rp {service.base_price.toLocaleString('id-ID')}/{service.unit_type}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Pilih Layanan" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {services.map((service) => (
+                                                <SelectItem key={service.id} value={service.id.toString()}>
+                                                    {service.service_name} — Rp {service.base_price.toLocaleString('id-ID')}/{service.unit_type}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
 
                                 {selectedService && (
                                     <>
-                                        {/* Weight or Quantity */}
-                                        {orderDetails.unitType === UnitType.KG ? (
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Estimated Weight (kg) <span className="text-red-500">*</span>
-                                                </label>
-                                                <input
-                                                    type="number"
-                                                    step="0.1"
-                                                    min="0"
-                                                    value={orderDetails.estimatedWeight}
-                                                    onChange={(e) => setOrderDetails({ ...orderDetails, estimatedWeight: e.target.value })}
-                                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                />
-                                            </div>
-                                        ) : (
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Quantity (pieces) <span className="text-red-500">*</span>
-                                                </label>
-                                                <input
-                                                    type="number"
-                                                    min="1"
-                                                    value={orderDetails.quantity}
-                                                    onChange={(e) => setOrderDetails({ ...orderDetails, quantity: e.target.value })}
-                                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                />
-                                            </div>
-                                        )}
-
-                                        {/* Priority */}
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
-                                            <select
-                                                value={orderDetails.priority}
-                                                onChange={(e) => setOrderDetails({ ...orderDetails, priority: e.target.value as OrderPriority })}
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            >
-                                                <option value={OrderPriority.REGULAR}>Regular</option>
-                                                <option value={OrderPriority.EXPRESS}>Express</option>
-                                            </select>
-                                        </div>
-
-                                        {/* Special Instructions */}
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Special Instructions</label>
-                                            <textarea
-                                                value={orderDetails.specialInstructions}
-                                                onChange={(e) => setOrderDetails({ ...orderDetails, specialInstructions: e.target.value })}
-                                                rows={3}
-                                                placeholder="Any special handling instructions..."
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        <div className="grid gap-2">
+                                            <Label>
+                                                {orderDetails.unitType === UnitType.KG ? 'Estimasi Berat (kg)' : 'Jumlah (pcs)'} <span className="text-destructive">*</span>
+                                            </Label>
+                                            <Input
+                                                type="number"
+                                                step={orderDetails.unitType === UnitType.KG ? "0.1" : "1"}
+                                                min="0"
+                                                value={orderDetails.unitType === UnitType.KG ? orderDetails.estimatedWeight : orderDetails.quantity}
+                                                onChange={(e) => setOrderDetails(orderDetails.unitType === UnitType.KG
+                                                    ? { ...orderDetails, estimatedWeight: e.target.value }
+                                                    : { ...orderDetails, quantity: e.target.value }
+                                                )}
                                             />
                                         </div>
 
-                                        {/* Price Display */}
-                                        <div className="bg-gray-50 rounded-lg p-4">
-                                            <div className="flex justify-between items-center">
-                                                <span className="text-gray-700 font-medium">Estimated Price:</span>
-                                                <span className="text-2xl font-bold text-blue-600">
+                                        <div className="grid gap-2">
+                                            <Label>Prioritas</Label>
+                                            <Select
+                                                value={orderDetails.priority}
+                                                onValueChange={(val) => setOrderDetails({ ...orderDetails, priority: val as OrderPriority })}
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value={OrderPriority.REGULAR}>Reguler</SelectItem>
+                                                    <SelectItem value={OrderPriority.EXPRESS}>Ekspress</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <div className="grid gap-2">
+                                            <Label>Catatan Khusus</Label>
+                                            <Textarea
+                                                placeholder="Contoh: Jangan disetrika terlalu panas, noda di kerah..."
+                                                value={orderDetails.specialInstructions}
+                                                onChange={(e) => setOrderDetails({ ...orderDetails, specialInstructions: e.target.value })}
+                                            />
+                                        </div>
+
+                                        <div className="bg-muted p-4 rounded-lg flex justify-between items-center">
+                                            <span className="font-medium">Estimasi Harga</span>
+                                            <div className="text-right">
+                                                <div className="text-2xl font-bold text-primary">
                                                     Rp {estimatedPrice.toLocaleString('id-ID')}
-                                                </span>
+                                                </div>
+                                                {minimumChargeApplied && (
+                                                    <div className="text-xs text-muted-foreground">* Minimum charge applied</div>
+                                                )}
                                             </div>
-                                            {selectedService.minimum_charge && estimatedPrice === selectedService.minimum_charge && (
-                                                <p className="text-sm text-gray-600 mt-2">* Minimum charge applied</p>
-                                            )}
                                         </div>
                                     </>
                                 )}
 
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={() => setCurrentStep('customer')}
-                                        className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                                    >
-                                        Back
-                                    </button>
-                                    <button
+                                <div className="flex gap-3 pt-4">
+                                    <Button variant="outline" onClick={() => setCurrentStep('customer')}>
+                                        Kembali
+                                    </Button>
+                                    <Button
+                                        className="flex-1"
                                         onClick={() => setCurrentStep('payment')}
                                         disabled={!selectedService || (!orderDetails.estimatedWeight && !orderDetails.quantity)}
-                                        className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
                                     >
-                                        Continue to Payment
-                                    </button>
+                                        Lanjut Pembayaran
+                                    </Button>
                                 </div>
-                            </div>
-                        </div>
+                            </CardContent>
+                        </Card>
                     </div>
                 )}
 
                 {/* Step 3: Payment */}
                 {currentStep === 'payment' && selectedCustomer && selectedService && (
-                    <div className="space-y-6">
-                        {/* Order Summary */}
-                        <div className="bg-white rounded-lg shadow-sm p-6">
-                            <h2 className="text-xl font-semibold text-gray-900 mb-4">Order Summary</h2>
-                            <div className="space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Customer:</span>
-                                    <span className="font-medium">{selectedCustomer.name}</span>
+                    <div className="grid gap-6">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Ringkasan Pesanan</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="space-y-2 text-sm">
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Pelanggan</span>
+                                        <span className="font-medium">{selectedCustomer.name}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Layanan</span>
+                                        <span className="font-medium">{selectedService.service_name}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">
+                                            {orderDetails.unitType === UnitType.KG ? 'Berat' : 'Jumlah'}
+                                        </span>
+                                        <span className="font-medium">
+                                            {orderDetails.unitType === UnitType.KG
+                                                ? `${orderDetails.estimatedWeight} kg`
+                                                : `${orderDetails.quantity} pcs`}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Prioritas</span>
+                                        <Badge variant="outline" className="capitalize">{orderDetails.priority}</Badge>
+                                    </div>
+                                    <div className="border-t pt-4 mt-2 flex justify-between items-center">
+                                        <span className="font-semibold text-lg">Total</span>
+                                        <span className="text-xl font-bold text-primary">
+                                            Rp {estimatedPrice.toLocaleString('id-ID')}
+                                        </span>
+                                    </div>
                                 </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Service:</span>
-                                    <span className="font-medium">{selectedService.service_name}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">
-                                        {orderDetails.unitType === UnitType.KG ? 'Weight:' : 'Quantity:'}
-                                    </span>
-                                    <span className="font-medium">
-                                        {orderDetails.unitType === UnitType.KG
-                                            ? `${orderDetails.estimatedWeight} kg`
-                                            : `${orderDetails.quantity} pcs`}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Priority:</span>
-                                    <span className="font-medium capitalize">{orderDetails.priority}</span>
-                                </div>
-                                <div className="border-t pt-2 mt-2 flex justify-between">
-                                    <span className="text-gray-900 font-semibold">Total:</span>
-                                    <span className="text-xl font-bold text-blue-600">
-                                        Rp {estimatedPrice.toLocaleString('id-ID')}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
+                            </CardContent>
+                        </Card>
 
-                        {/* Payment Form */}
-                        <div className="bg-white rounded-lg shadow-sm p-6">
-                            <h2 className="text-xl font-semibold text-gray-900 mb-4">Payment Details</h2>
-
-                            <div className="space-y-4">
-                                {/* Payment Status */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Payment Status</label>
-                                    <select
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Detail Pembayaran</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="grid gap-2">
+                                    <Label>Status Pembayaran</Label>
+                                    <Select
                                         value={paymentDetails.paymentStatus}
-                                        onChange={(e) => setPaymentDetails({ ...paymentDetails, paymentStatus: e.target.value as PaymentStatus })}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        onValueChange={(val) => setPaymentDetails({ ...paymentDetails, paymentStatus: val as PaymentStatus })}
                                     >
-                                        <option value={PaymentStatus.UNPAID}>Unpaid (Pay Later)</option>
-                                        <option value={PaymentStatus.PARTIAL}>Partial Payment</option>
-                                        <option value={PaymentStatus.PAID}>Paid in Full</option>
-                                    </select>
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value={PaymentStatus.UNPAID}>Belum Lunas (Bayar Nanti)</SelectItem>
+                                            <SelectItem value={PaymentStatus.PARTIAL}>Bayar Sebagian (DP)</SelectItem>
+                                            <SelectItem value={PaymentStatus.PAID}>Lunas</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
 
-                                {/* Payment Method (if not unpaid) */}
                                 {paymentDetails.paymentStatus !== PaymentStatus.UNPAID && (
                                     <>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
-                                            <select
+                                        <div className="grid gap-2">
+                                            <Label>Metode Pembayaran</Label>
+                                            <Select
                                                 value={paymentDetails.paymentMethod}
-                                                onChange={(e) => setPaymentDetails({ ...paymentDetails, paymentMethod: e.target.value as PaymentMethod })}
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                onValueChange={(val) => setPaymentDetails({ ...paymentDetails, paymentMethod: val as PaymentMethod })}
                                             >
-                                                <option value={PaymentMethod.CASH}>Cash</option>
-                                                <option value={PaymentMethod.TRANSFER}>Bank Transfer</option>
-                                                <option value={PaymentMethod.CARD}>Card</option>
-                                                <option value={PaymentMethod.OTHER}>Other</option>
-                                            </select>
+                                                <SelectTrigger>
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value={PaymentMethod.CASH}>Tunai (Cash)</SelectItem>
+                                                    <SelectItem value={PaymentMethod.TRANSFER}>Transfer Bank</SelectItem>
+                                                    <SelectItem value={PaymentMethod.CARD}>Kartu Debit/Kredit</SelectItem>
+                                                    <SelectItem value={PaymentMethod.OTHER}>Lainnya (QRIS/E-Wallet)</SelectItem>
+                                                </SelectContent>
+                                            </Select>
                                         </div>
 
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Amount Paid <span className="text-red-500">*</span>
-                                            </label>
-                                            <input
-                                                type="number"
-                                                min="0"
-                                                max={estimatedPrice}
-                                                value={paymentDetails.paidAmount}
-                                                onChange={(e) => setPaymentDetails({ ...paymentDetails, paidAmount: e.target.value })}
-                                                placeholder="0"
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            />
+                                        <div className="grid gap-2">
+                                            <Label>Jumlah Bayar <span className="text-destructive">*</span></Label>
+                                            <div className="relative">
+                                                <span className="absolute left-3 top-2 text-muted-foreground">Rp</span>
+                                                <Input
+                                                    type="number"
+                                                    className="pl-9"
+                                                    value={paymentDetails.paidAmount}
+                                                    onChange={(e) => setPaymentDetails({ ...paymentDetails, paidAmount: e.target.value })}
+                                                />
+                                            </div>
                                             {paymentDetails.paidAmount && parseFloat(paymentDetails.paidAmount) < estimatedPrice && (
-                                                <p className="text-sm text-yellow-600 mt-1">
-                                                    Remaining: Rp {(estimatedPrice - parseFloat(paymentDetails.paidAmount)).toLocaleString('id-ID')}
+                                                <p className="text-sm text-yellow-600">
+                                                    Sisa Tagihan: Rp {(estimatedPrice - parseFloat(paymentDetails.paidAmount)).toLocaleString('id-ID')}
                                                 </p>
                                             )}
                                         </div>
                                     </>
                                 )}
 
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={() => setCurrentStep('order')}
-                                        className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                                    >
-                                        Back
-                                    </button>
-                                    <button
+                                <div className="flex gap-3 pt-4">
+                                    <Button variant="outline" onClick={() => setCurrentStep('order')}>
+                                        Kembali
+                                    </Button>
+                                    <Button
+                                        className="flex-1"
+                                        size="lg"
                                         onClick={createOrder}
                                         disabled={isLoading}
-                                        className="flex-1 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition-colors font-semibold"
                                     >
-                                        {isLoading ? 'Creating Order...' : 'Create Order'}
-                                    </button>
+                                        {isLoading ? 'Memproses...' : 'Buat Pesanan'}
+                                    </Button>
                                 </div>
-                            </div>
-                        </div>
+                            </CardContent>
+                        </Card>
                     </div>
                 )}
             </div>

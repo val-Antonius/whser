@@ -5,8 +5,9 @@
 // ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db';
+import { query, getPool } from '@/lib/db';
 import { ApiResponse } from '@/types';
+import { RowDataPacket } from 'mysql2';
 
 /**
  * GET /api/orders/[id]
@@ -118,7 +119,7 @@ export async function PATCH(
         const { is_priority, priority_reason } = body;
 
         // Verify order exists
-        const [orders] = await pool.query<RowDataPacket[]>(
+        const [orders] = await getPool().query<RowDataPacket[]>(
             'SELECT id FROM orders WHERE id = ?',
             [orderId]
         );
@@ -153,7 +154,7 @@ export async function PATCH(
 
         values.push(orderId);
 
-        await pool.query(
+        await getPool().query(
             `UPDATE orders SET ${updates.join(', ')} WHERE id = ?`,
             values
         );

@@ -1,13 +1,58 @@
 'use client';
 
+// ============================================================================
+// OWNER ANALYTICS DASHBOARD
+// ============================================================================
+// Purpose: Main analytics dashboard with metrics display and visualization
+// Phase: 3.3 - Post-Operational Dashboard UI
+// ============================================================================
+
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { UserRole } from '@/types';
+import { MetricCard } from '@/components/analytics/MetricCard';
+import { MetricDrilldown } from '@/components/analytics/MetricDrilldown';
+import { Button } from '@/components/ui/button';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Download, RefreshCw } from 'lucide-react';
+
+interface Snapshot {
+    id: number;
+    snapshot_name: string;
+    period_type: string;
+    period_start: string;
+    period_end: string;
+    total_orders: number;
+    total_revenue: number;
+}
+
+interface Metric {
+    id: number;
+    metric_name: string;
+    metric_value: number;
+    baseline_value: number | null;
+    variance: number | null;
+    variance_percentage: number | null;
+    significance_level: 'normal' | 'attention' | 'critical';
+    metadata?: Record<string, unknown>;
+}
 
 export default function OwnerAnalytics() {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(true);
+    const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
+    const [selectedSnapshotId, setSelectedSnapshotId] = useState<number | null>(null);
+    const [metrics, setMetrics] = useState<Metric[]>([]);
+    const [loadingMetrics, setLoadingMetrics] = useState(false);
+    const [selectedMetric, setSelectedMetric] = useState<Metric | null>(null);
+    const [isDrilldownOpen, setIsDrilldownOpen] = useState(false);
 
     useEffect(() => {
         // Check if user has owner role
@@ -17,7 +62,52 @@ export default function OwnerAnalytics() {
             return;
         }
         setIsLoading(false);
+        fetchSnapshots();
     }, [router]);
+
+    const fetchSnapshots = async () => {
+        try {
+            const response = await fetch('/api/analytics/snapshots');
+            const data = await response.json();
+            if (data.success && data.data) {
+                setSnapshots(data.data);
+                // Auto-select the latest snapshot
+                if (data.data.length > 0) {
+                    setSelectedSnapshotId(data.data[0].id);
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching snapshots:', error);
+        }
+    };
+
+    const fetchMetrics = async (snapshotId: number) => {
+        setLoadingMetrics(true);
+        try {
+            const response = await fetch(`/api/analytics/metrics?snapshotId=${snapshotId}`);
+            const data = await response.json();
+            if (data.success && data.data) {
+                setMetrics(data.data);
+            }
+        } catch (error) {
+            console.error('Error fetching metrics:', error);
+        } finally {
+            setLoadingMetrics(false);
+        }
+    };
+
+    useEffect(() => {
+        if (selectedSnapshotId) {
+            fetchMetrics(selectedSnapshotId);
+        }
+    }, [selectedSnapshotId]);
+
+    const handleMetricClick = (metric: Metric) => {
+        setSelectedMetric(metric);
+        setIsDrilldownOpen(true);
+    };
+
+    const selectedSnapshot = snapshots.find(s => s.id === selectedSnapshotId);
 
     if (isLoading) {
         return (
@@ -40,8 +130,8 @@ export default function OwnerAnalytics() {
                                 </svg>
                             </div>
                             <div>
-                                <h1 className="text-xl font-bold text-gray-900">Analytics Dashboard</h1>
-                                <p className="text-sm text-gray-500">Owner Role</p>
+                                <h1 className="text-xl font-bold text-gray-900">Dashboard Analitik</h1>
+                                <p className="text-sm text-gray-500">Peran Pemilik</p>
                             </div>
                         </div>
                         <button
@@ -51,7 +141,7 @@ export default function OwnerAnalytics() {
                             }}
                             className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
                         >
-                            Switch Role
+                            Ganti Peran
                         </button>
                     </div>
                 </div>
@@ -65,25 +155,25 @@ export default function OwnerAnalytics() {
                             href="/owner/analytics"
                             className="border-b-2 border-purple-500 py-4 px-1 text-sm font-medium text-purple-600"
                         >
-                            Analytics
+                            Analitik
                         </Link>
                         <Link
                             href="/owner/insights"
                             className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
                         >
-                            Insights
+                            Wawasan
                         </Link>
                         <Link
                             href="/owner/recommendations"
                             className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
                         >
-                            Recommendations
+                            Rekomendasi
                         </Link>
                         <Link
                             href="/owner/tasks"
                             className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
                         >
-                            Tasks
+                            Tugas
                         </Link>
                     </div>
                 </div>
@@ -93,133 +183,120 @@ export default function OwnerAnalytics() {
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Welcome Section */}
                 <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg shadow-lg p-8 mb-8 text-white">
-                    <h2 className="text-3xl font-bold mb-2">Welcome to Analytics Dashboard</h2>
-                    <p className="text-purple-100">Strategic insights and AI-powered recommendations for your business</p>
+                    <h2 className="text-3xl font-bold mb-2">Selamat Datang di Dashboard Analitik</h2>
+                    <p className="text-purple-100">Wawasan strategis dan rekomendasi berbasis AI untuk bisnis Anda</p>
                 </div>
 
-                {/* Period Selector Placeholder */}
+                {/* Period Selector & Actions */}
                 <div className="bg-white rounded-lg shadow p-6 mb-8">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h3 className="text-lg font-semibold text-gray-900 mb-1">Analysis Period</h3>
-                            <p className="text-sm text-gray-600">Select a period to view analytics</p>
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-1">Periode Analisis</h3>
+                            <p className="text-sm text-gray-600 mb-4">Pilih snapshot untuk melihat metrik</p>
+
+                            <Select
+                                value={selectedSnapshotId?.toString()}
+                                onValueChange={(value) => setSelectedSnapshotId(parseInt(value))}
+                            >
+                                <SelectTrigger className="w-full md:w-96">
+                                    <SelectValue placeholder="Pilih periode..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {snapshots.map((snapshot) => (
+                                        <SelectItem key={snapshot.id} value={snapshot.id.toString()}>
+                                            {snapshot.snapshot_name} ({snapshot.period_start} - {snapshot.period_end})
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+
+                            {selectedSnapshot && (
+                                <div className="mt-4 flex gap-4 text-sm text-gray-600">
+                                    <span>📦 {selectedSnapshot.total_orders} pesanan</span>
+                                    <span>💰 Rp {selectedSnapshot.total_revenue.toLocaleString('id-ID')}</span>
+                                </div>
+                            )}
                         </div>
-                        <button className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors">
-                            Select Period
-                        </button>
+
+                        <div className="flex gap-2">
+                            <Button
+                                variant="outline"
+                                onClick={() => fetchSnapshots()}
+                                className="gap-2"
+                            >
+                                <RefreshCw className="h-4 w-4" />
+                                Refresh
+                            </Button>
+                            <Link href="/owner/analytics/snapshots">
+                                <Button variant="default">
+                                    Kelola Snapshot
+                                </Button>
+                            </Link>
+                        </div>
                     </div>
                 </div>
 
-                {/* Key Metrics Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                                </svg>
-                            </div>
-                            <span className="text-xs font-medium text-green-600 bg-green-100 px-2 py-1 rounded">+0%</span>
+                {/* Metrics Grid */}
+                {selectedSnapshotId && (
+                    <div>
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xl font-bold text-gray-900">Metrik Kinerja</h3>
+                            <Button variant="outline" className="gap-2">
+                                <Download className="h-4 w-4" />
+                                Ekspor Laporan
+                            </Button>
                         </div>
-                        <p className="text-sm text-gray-600 mb-1">SLA Compliance</p>
-                        <p className="text-3xl font-bold text-gray-900">--</p>
+
+                        {loadingMetrics ? (
+                            <div className="flex items-center justify-center py-12">
+                                <div className="text-gray-600">Memuat metrik...</div>
+                            </div>
+                        ) : metrics.length === 0 ? (
+                            <div className="bg-white rounded-lg shadow p-12 text-center">
+                                <p className="text-gray-600">Tidak ada metrik untuk snapshot ini</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                {metrics.map((metric) => (
+                                    <MetricCard
+                                        key={metric.id}
+                                        metricName={metric.metric_name}
+                                        metricValue={metric.metric_value}
+                                        baselineValue={metric.baseline_value}
+                                        variance={metric.variance}
+                                        variancePercentage={metric.variance_percentage}
+                                        significanceLevel={metric.significance_level}
+                                        onClick={() => handleMetricClick(metric)}
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </div>
+                )}
 
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                            <span className="text-xs font-medium text-green-600 bg-green-100 px-2 py-1 rounded">+0%</span>
+                {/* Empty State */}
+                {!selectedSnapshotId && snapshots.length === 0 && (
+                    <div className="bg-white rounded-lg shadow p-12 text-center">
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
                         </div>
-                        <p className="text-sm text-gray-600 mb-1">Total Revenue</p>
-                        <p className="text-3xl font-bold text-gray-900">Rp --</p>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Belum Ada Snapshot</h3>
+                        <p className="text-gray-600 mb-6">Buat snapshot pertama Anda untuk mulai menganalisis data</p>
+                        <Link href="/owner/analytics/snapshots">
+                            <Button>Buat Snapshot</Button>
+                        </Link>
                     </div>
-
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                                <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                </svg>
-                            </div>
-                            <span className="text-xs font-medium text-red-600 bg-red-100 px-2 py-1 rounded">+0%</span>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-1">Rewash Rate</p>
-                        <p className="text-3xl font-bold text-gray-900">--</p>
-                    </div>
-
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                            <span className="text-xs font-medium text-green-600 bg-green-100 px-2 py-1 rounded">+0%</span>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-1">Order Completion</p>
-                        <p className="text-3xl font-bold text-gray-900">--</p>
-                    </div>
-                </div>
-
-                {/* Feature Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <Link href="/owner/insights" className="block group">
-                        <div className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border-2 border-transparent group-hover:border-purple-500">
-                            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                                </svg>
-                            </div>
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">AI-Powered Insights</h3>
-                            <p className="text-sm text-gray-600">Automated insights generated from operational data analysis</p>
-                        </div>
-                    </Link>
-
-                    <Link href="/owner/recommendations" className="block group">
-                        <div className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border-2 border-transparent group-hover:border-purple-500">
-                            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                                </svg>
-                            </div>
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">Recommendations</h3>
-                            <p className="text-sm text-gray-600">Actionable recommendations for process improvements</p>
-                        </div>
-                    </Link>
-
-                    <Link href="/owner/tasks" className="block group">
-                        <div className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border-2 border-transparent group-hover:border-purple-500">
-                            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                                </svg>
-                            </div>
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">Task Management</h3>
-                            <p className="text-sm text-gray-600">Create and assign tasks to admin team based on insights</p>
-                        </div>
-                    </Link>
-                </div>
-
-                {/* Coming Soon Notice */}
-                <div className="mt-8 bg-purple-50 border border-purple-200 rounded-lg p-6">
-                    <div className="flex items-start">
-                        <svg className="w-6 h-6 text-purple-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <div>
-                            <h4 className="text-sm font-semibold text-purple-900 mb-1">Phase 1.2: User Role System Complete</h4>
-                            <p className="text-sm text-purple-700">
-                                The analytics features (Data Snapshots, Metrics, Insights, Recommendations, Tasks) will be implemented in Phase 3-5.
-                                The operational application must be built first (Phase 1-2).
-                            </p>
-                        </div>
-                    </div>
-                </div>
+                )}
             </main>
+
+            {/* Metric Drilldown Modal */}
+            <MetricDrilldown
+                isOpen={isDrilldownOpen}
+                onClose={() => setIsDrilldownOpen(false)}
+                metric={selectedMetric}
+            />
         </div>
     );
 }

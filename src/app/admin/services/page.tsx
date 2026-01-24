@@ -14,6 +14,11 @@ import ProcessChecklist from '@/components/service/ProcessChecklist';
 import RewashModal from '@/components/service/RewashModal';
 import BatchCreateModal from '@/components/service/BatchCreateModal';
 import BatchList from '@/components/service/BatchList';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface QueueOrder {
     id: number;
@@ -234,400 +239,340 @@ export default function ServiceManagementPage() {
     ];
 
     return (
-        <div className="p-6">
-            <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-gray-900">Service Management</h1>
-                    <p className="text-gray-600 mt-1">Track and manage order workflow with advanced features</p>
-                </div>
+        <div>
+            <PageHeader
+                title="Manajemen Proses Layanan"
+                description="Lacak dan kelola alur kerja pesanan dengan fitur lanjutan"
+                breadcrumbs={[
+                    { label: 'Dashboard', href: '/admin/dashboard/operations' },
+                    { label: 'Proses Layanan' }
+                ]}
+                actions={
+                    <div className="flex gap-2">
+                        <Link href="/admin/reports/aging">
+                            <Button variant="outline">
+                                📊 Laporan Aging
+                            </Button>
+                        </Link>
+                        <Button onClick={() => setShowBatchModal(true)}>
+                            + Buat Batch
+                        </Button>
+                    </div>
+                }
+            />
 
-                {/* SLA Alert Banner */}
+            {/* SLA Alert Banner */}
+            <div className="mb-6">
                 <SLAAlertBanner alerts={slaAlerts} onAcknowledge={handleAcknowledgeAlert} />
-
-                {/* Action Buttons */}
-                <div className="mb-6 flex gap-3">
-                    <button
-                        onClick={() => setShowBatchModal(true)}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                        + Create Batch
-                    </button>
-                    <Link
-                        href="/admin/reports/aging"
-                        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                    >
-                        📊 View Aging Report
-                    </Link>
-                </div>
-
-                {/* Active Batches Section */}
-                {batches.length > 0 && (
-                    <div className="mb-6">
-                        <h2 className="text-xl font-bold mb-3">Active Batches</h2>
-                        <BatchList batches={batches} onBatchClick={handleBatchClick} />
-                    </div>
-                )}
-
-                {/* Tabs */}
-                <div className="bg-white rounded-lg shadow-sm mb-6">
-                    <div className="border-b border-gray-200">
-                        <div className="flex space-x-8 px-6">
-                            <button
-                                onClick={() => {
-                                    setActiveTab('active');
-                                    setStatusFilter('');
-                                }}
-                                className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'active'
-                                    ? 'border-green-500 text-green-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                    }`}
-                            >
-                                Active Orders ({orders.filter(o => !['completed', 'ready_for_pickup', 'closed', 'cancelled'].includes(o.current_status)).length})
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setActiveTab('completed');
-                                    setStatusFilter('completed');
-                                }}
-                                className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'completed'
-                                    ? 'border-green-500 text-green-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                    }`}
-                            >
-                                Completed
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setActiveTab('all');
-                                    setStatusFilter('');
-                                }}
-                                className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'all'
-                                    ? 'border-green-500 text-green-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                    }`}
-                            >
-                                All Orders
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Filters */}
-                    <div className="p-4 border-b border-gray-200">
-                        <div className="flex gap-4 items-center">
-                            <label className="text-sm font-medium text-gray-700">Quick Filter:</label>
-                            <select
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value)}
-                                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            >
-                                <option value="">All Statuses</option>
-                                <option value={OrderStatus.RECEIVED}>Received</option>
-                                <option value={OrderStatus.WAITING_FOR_PROCESS}>Waiting for Process</option>
-                                <option value={OrderStatus.IN_WASH}>In Wash</option>
-                                <option value={OrderStatus.IN_DRY}>In Dry</option>
-                                <option value={OrderStatus.IN_IRON}>In Iron</option>
-                                <option value={OrderStatus.IN_FOLD}>In Fold</option>
-                                <option value={OrderStatus.READY_FOR_QC}>Ready for QC</option>
-                                <option value={OrderStatus.COMPLETED}>Completed</option>
-                            </select>
-                            <button
-                                onClick={fetchOrders}
-                                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                                Refresh
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Order Queue - Enhanced Kanban Style */}
-                {isLoading ? (
-                    <div className="text-center py-12 text-gray-600">Loading orders...</div>
-                ) : activeTab === 'active' && !statusFilter ? (
-                    <div className="overflow-x-auto pb-4">
-                        <div className="flex gap-4 min-w-max">
-                            {statusOrder.map(status => {
-                                const statusOrders = orders.filter(o => o.current_status === status);
-                                if (statusOrders.length === 0) return null;
-
-                                return (
-                                    <div key={status} className="flex-shrink-0 w-96">
-                                        <div className="bg-white rounded-lg shadow-sm">
-                                            {/* Column Header */}
-                                            <div className={`p-4 border-b-4 rounded-t-lg ${getStatusColor(status)}`}>
-                                                <h3 className="font-semibold text-sm uppercase tracking-wide">
-                                                    {formatStatus(status)}
-                                                </h3>
-                                                <p className="text-xs mt-1 opacity-75">{statusOrders.length} orders</p>
-                                            </div>
-
-                                            {/* Order Cards */}
-                                            <div className="p-3 space-y-3 max-h-[600px] overflow-y-auto">
-                                                {statusOrders.map(order => {
-                                                    const slaStatus = getSLAStatus(order.estimated_completion, order.current_status);
-                                                    const isExpanded = expandedOrders.has(order.id);
-
-                                                    return (
-                                                        <div
-                                                            key={order.id}
-                                                            className="bg-gray-50 rounded-lg border border-gray-200"
-                                                        >
-                                                            {/* Order Header - Clickable */}
-                                                            <div
-                                                                onClick={() => toggleOrderExpansion(order.id)}
-                                                                className="p-4 cursor-pointer hover:bg-gray-100 transition-colors"
-                                                            >
-                                                                {/* Order Number & Priority */}
-                                                                <div className="flex justify-between items-start mb-2">
-                                                                    <span className="font-semibold text-gray-900 text-sm">
-                                                                        {order.order_number}
-                                                                    </span>
-                                                                    <div className="flex gap-1">
-                                                                        {order.priority === 'express' && (
-                                                                            <span className={`px-2 py-0.5 text-xs font-semibold rounded border ${getPriorityColor(order.priority)}`}>
-                                                                                EXPRESS
-                                                                            </span>
-                                                                        )}
-                                                                        {order.is_priority && (
-                                                                            <span className="text-orange-600 text-lg">⚡</span>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-
-                                                                {/* Customer */}
-                                                                <div className="text-sm text-gray-700 mb-2">
-                                                                    <div className="font-medium">{order.customer_name}</div>
-                                                                    <div className="text-xs text-gray-500">{order.customer_phone}</div>
-                                                                </div>
-
-                                                                {/* Service */}
-                                                                <div className="text-xs text-gray-600 mb-3">
-                                                                    {order.service_name}
-                                                                </div>
-
-                                                                {/* SLA Status */}
-                                                                {slaStatus && (
-                                                                    <div className={`text-xs font-semibold px-2 py-1 rounded border ${slaStatus.color} inline-block mb-2`}>
-                                                                        {slaStatus.label}
-                                                                    </div>
-                                                                )}
-
-                                                                {/* Aging Indicator */}
-                                                                <div className="text-xs text-gray-500">
-                                                                    Age: {parseFloat(String(order.aging_hours || 0)).toFixed(1)}h | Stage: {parseFloat(String(order.stage_aging_hours || 0)).toFixed(1)}h
-                                                                </div>
-
-                                                                {/* Expand Indicator */}
-                                                                <div className="text-xs text-blue-600 mt-2">
-                                                                    {isExpanded ? '▼ Click to collapse' : '▶ Click to expand details'}
-                                                                </div>
-                                                            </div>
-
-                                                            {/* Expanded Details */}
-                                                            {isExpanded && (
-                                                                <div className="border-t border-gray-200 p-4 space-y-4 bg-white">
-                                                                    {/* Order Aging Card */}
-                                                                    <OrderAgingCard
-                                                                        agingHours={parseFloat(String(order.aging_hours || 0))}
-                                                                        stageAgingHours={parseFloat(String(order.stage_aging_hours || 0))}
-                                                                        currentStage={formatStatus(order.current_status)}
-                                                                        createdAt={order.created_at}
-                                                                    />
-
-                                                                    {/* Priority Marker */}
-                                                                    <PriorityMarker
-                                                                        orderId={order.id}
-                                                                        isPriority={order.is_priority}
-                                                                        priorityReason={order.priority_reason}
-                                                                        onUpdate={fetchOrders}
-                                                                    />
-
-                                                                    {/* Action Buttons */}
-                                                                    <div className="flex gap-2">
-                                                                        <button
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                setSelectedOrderId(order.id);
-                                                                                setShowExceptionModal(true);
-                                                                            }}
-                                                                            className="flex-1 px-3 py-2 text-sm bg-red-50 text-red-700 border border-red-200 rounded hover:bg-red-100"
-                                                                        >
-                                                                            Report Exception
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                setSelectedOrderId(order.id);
-                                                                                setShowRewashModal(true);
-                                                                            }}
-                                                                            className="flex-1 px-3 py-2 text-sm bg-orange-50 text-orange-700 border border-orange-200 rounded hover:bg-orange-100"
-                                                                        >
-                                                                            Record Rewash
-                                                                        </button>
-                                                                    </div>
-
-                                                                    {/* View Full Details Link */}
-                                                                    <Link
-                                                                        href={`/admin/orders/${order.id}`}
-                                                                        className="block text-center text-sm text-blue-600 hover:text-blue-800 font-medium"
-                                                                        onClick={(e) => e.stopPropagation()}
-                                                                    >
-                                                                        View Full Details →
-                                                                    </Link>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                ) : (
-                    // List View for completed/all/filtered
-                    <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-                        {orders.length === 0 ? (
-                            <div className="p-8 text-center text-gray-600">
-                                No orders found
-                            </div>
-                        ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full">
-                                    <thead className="bg-gray-50 border-b border-gray-200">
-                                        <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Order
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Customer
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Service
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Status
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Priority
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Aging
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Due Date
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Actions
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                        {orders.map(order => {
-                                            const slaStatus = getSLAStatus(order.estimated_completion, order.current_status);
-
-                                            return (
-                                                <tr key={order.id} className="hover:bg-gray-50">
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="text-sm font-medium text-gray-900">{order.order_number}</div>
-                                                        <div className="text-xs text-gray-500">
-                                                            {new Date(order.created_at).toLocaleDateString('id-ID')}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="text-sm text-gray-900">{order.customer_name}</div>
-                                                        <div className="text-xs text-gray-500">{order.customer_phone}</div>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {order.service_name}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded border ${getStatusColor(order.current_status)}`}>
-                                                            {formatStatus(order.current_status)}
-                                                        </span>
-                                                        {slaStatus && (
-                                                            <div className={`mt-1 px-2 py-0.5 inline-flex text-xs font-semibold rounded border ${slaStatus.color}`}>
-                                                                {slaStatus.label}
-                                                            </div>
-                                                        )}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="flex items-center gap-1">
-                                                            <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded border ${getPriorityColor(order.priority)}`}>
-                                                                {order.priority.toUpperCase()}
-                                                            </span>
-                                                            {order.is_priority && (
-                                                                <span className="text-orange-600 text-lg">⚡</span>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {parseFloat(String(order.aging_hours || 0)).toFixed(1)}h
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {new Date(order.estimated_completion).toLocaleString('id-ID')}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                                        <Link
-                                                            href={`/admin/orders/${order.id}`}
-                                                            className="text-green-600 hover:text-green-900 font-medium"
-                                                        >
-                                                            View Details →
-                                                        </Link>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </div>
-                )}
             </div>
 
-            {/* Modals */}
-            {selectedOrderId && (
-                <>
-                    <ExceptionReportModal
-                        orderId={selectedOrderId}
-                        isOpen={showExceptionModal}
-                        onClose={() => {
-                            setShowExceptionModal(false);
-                            setSelectedOrderId(null);
-                        }}
-                        onSuccess={() => {
-                            fetchOrders();
-                            setShowExceptionModal(false);
-                            setSelectedOrderId(null);
-                        }}
-                    />
-                    <RewashModal
-                        orderId={selectedOrderId}
-                        isOpen={showRewashModal}
-                        onClose={() => {
-                            setShowRewashModal(false);
-                            setSelectedOrderId(null);
-                        }}
-                        onSuccess={() => {
-                            fetchOrders();
-                            setShowRewashModal(false);
-                            setSelectedOrderId(null);
-                        }}
-                    />
-                </>
+            {/* Active Batches Section */}
+            {batches.length > 0 && (
+                <div className="mb-6">
+                    <h2 className="text-xl font-bold mb-3">Active Batches</h2>
+                    <BatchList batches={batches} onBatchClick={handleBatchClick} />
+                </div>
             )}
-            <BatchCreateModal
-                isOpen={showBatchModal}
-                onClose={() => setShowBatchModal(false)}
-                onSuccess={() => {
-                    fetchBatches();
-                    setShowBatchModal(false);
-                }}
-            />
+
+            {/* Tabs */}
+            <div className="bg-white rounded-lg shadow-sm mb-6">
+                <div className="border-b border-gray-200">
+                    <div className="flex space-x-8 px-6">
+                        <button
+                            onClick={() => {
+                                setActiveTab('active');
+                                setStatusFilter('');
+                            }}
+                            className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'active'
+                                ? 'border-green-500 text-green-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                }`}
+                        >
+                            Active Orders ({orders.filter(o => !['completed', 'ready_for_pickup', 'closed', 'cancelled'].includes(o.current_status)).length})
+                        </button>
+                        <button
+                            onClick={() => {
+                                setActiveTab('completed');
+                                setStatusFilter('completed');
+                            }}
+                            className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'completed'
+                                ? 'border-green-500 text-green-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                }`}
+                        >
+                            Completed
+                        </button>
+                        <button
+                            onClick={() => {
+                                setActiveTab('all');
+                                setStatusFilter('');
+                            }}
+                            className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'all'
+                                ? 'border-green-500 text-green-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                }`}
+                        >
+                            All Orders
+                        </button>
+                    </div>
+                </div>
+
+                {/* Filters */}
+                <div className="p-4 border-b border-gray-200">
+                    <div className="flex gap-4 items-center">
+                        <label className="text-sm font-medium text-gray-700">Quick Filter:</label>
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        >
+                            <option value="">All Statuses</option>
+                            <option value={OrderStatus.RECEIVED}>Received</option>
+                            <option value={OrderStatus.WAITING_FOR_PROCESS}>Waiting for Process</option>
+                            <option value={OrderStatus.IN_WASH}>In Wash</option>
+                            <option value={OrderStatus.IN_DRY}>In Dry</option>
+                            <option value={OrderStatus.IN_IRON}>In Iron</option>
+                            <option value={OrderStatus.IN_FOLD}>In Fold</option>
+                            <option value={OrderStatus.READY_FOR_QC}>Ready for QC</option>
+                            <option value={OrderStatus.COMPLETED}>Completed</option>
+                        </select>
+                        <button
+                            onClick={fetchOrders}
+                            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Order Queue - Enhanced Kanban Style */}
+            {isLoading ? (
+                <div className="text-center py-12 text-gray-600">Loading orders...</div>
+            ) : activeTab === 'active' && !statusFilter ? (
+                <div className="overflow-x-auto pb-4">
+                    <div className="flex gap-4 min-w-max">
+                        {statusOrder.map(status => {
+                            const statusOrders = orders.filter(o => o.current_status === status);
+                            if (statusOrders.length === 0) return null;
+
+                            return (
+                                <div key={status} className="flex-shrink-0 w-96">
+                                    <div className="bg-white rounded-lg shadow-sm">
+                                        {/* Column Header */}
+                                        <div className={`p-4 border-b-4 rounded-t-lg ${getStatusColor(status)}`}>
+                                            <h3 className="font-semibold text-sm uppercase tracking-wide">
+                                                {formatStatus(status)}
+                                            </h3>
+                                            <p className="text-xs mt-1 opacity-75">{statusOrders.length} orders</p>
+                                        </div>
+
+                                        {/* Order Cards */}
+                                        <div className="p-3 space-y-3 max-h-[600px] overflow-y-auto">
+                                            {statusOrders.map(order => {
+                                                const slaStatus = getSLAStatus(order.estimated_completion, order.current_status);
+                                                const isExpanded = expandedOrders.has(order.id);
+
+                                                return (
+                                                    <div
+                                                        key={order.id}
+                                                        className="bg-gray-50 rounded-lg border border-gray-200"
+                                                    >
+                                                        {/* Order Header - Clickable */}
+                                                        <div
+                                                            onClick={() => toggleOrderExpansion(order.id)}
+                                                            className="p-4 cursor-pointer hover:bg-gray-100 transition-colors"
+                                                        >
+                                                            {/* Order Number & Priority */}
+                                                            <div className="flex justify-between items-start mb-2">
+                                                                <span className="font-semibold text-gray-900 text-sm">
+                                                                    {order.order_number}
+                                                                </span>
+                                                                <div className="flex gap-1">
+                                                                    {order.priority === 'express' && (
+                                                                        <span className={`px-2 py-0.5 text-xs font-semibold rounded border ${getPriorityColor(order.priority)}`}>
+                                                                            EXPRESS
+                                                                        </span>
+                                                                    )}
+                                                                    {order.is_priority && (
+                                                                        <span className="text-orange-600 text-lg">⚡</span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Customer */}
+                                                            <div className="text-sm text-gray-700 mb-2">
+                                                                <div className="font-medium">{order.customer_name}</div>
+                                                                <div className="text-xs text-gray-500">{order.customer_phone}</div>
+                                                            </div>
+
+                                                            {/* Service */}
+                                                            <div className="text-xs text-gray-600 mb-3">
+                                                                {order.service_name}
+                                                            </div>
+
+                                                            {/* SLA Status */}
+                                                            {slaStatus && (
+                                                                <div className={`text-xs font-semibold px-2 py-1 rounded border ${slaStatus.color} inline-block mb-2`}>
+                                                                    {slaStatus.label}
+                                                                </div>
+                                                            )}
+
+                                                            {/* Aging Indicator */}
+                                                            <div className="text-xs text-gray-500">
+                                                                Age: {parseFloat(String(order.aging_hours || 0)).toFixed(1)}h | Stage: {parseFloat(String(order.stage_aging_hours || 0)).toFixed(1)}h
+                                                            </div>
+
+                                                            {/* Expand Indicator */}
+                                                            <div className="text-xs text-blue-600 mt-2">
+                                                                {isExpanded ? '▼ Click to collapse' : '▶ Click to expand details'}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Expanded Details */}
+                                                        {isExpanded && (
+                                                            <div className="border-t border-gray-200 p-4 space-y-4 bg-white">
+                                                                {/* Order Aging Card */}
+                                                                <OrderAgingCard
+                                                                    agingHours={parseFloat(String(order.aging_hours || 0))}
+                                                                    stageAgingHours={parseFloat(String(order.stage_aging_hours || 0))}
+                                                                    currentStage={formatStatus(order.current_status)}
+                                                                    createdAt={order.created_at}
+                                                                />
+
+                                                                {/* Priority Marker */}
+                                                                <PriorityMarker
+                                                                    orderId={order.id}
+                                                                    isPriority={order.is_priority}
+                                                                    priorityReason={order.priority_reason}
+                                                                    onUpdate={fetchOrders}
+                                                                />
+
+                                                                {/* Action Buttons */}
+                                                                <div className="flex gap-2">
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setSelectedOrderId(order.id);
+                                                                            setShowExceptionModal(true);
+                                                                        }}
+                                                                        className="flex-1 px-3 py-2 text-sm bg-red-50 text-red-700 border border-red-200 rounded hover:bg-red-100"
+                                                                    >
+                                                                        Report Exception
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setSelectedOrderId(order.id);
+                                                                            setShowRewashModal(true);
+                                                                        }}
+                                                                        className="flex-1 px-3 py-2 text-sm bg-orange-50 text-orange-700 border border-orange-200 rounded hover:bg-orange-100"
+                                                                    >
+                                                                        Record Rewash
+                                                                    </button>
+                                                                </div>
+
+                                                                {/* View Full Details Link */}
+                                                                <Link
+                                                                    href={`/admin/orders/${order.id}`}
+                                                                    className="block text-center text-sm text-blue-600 hover:text-blue-800 font-medium"
+                                                                    onClick={(e) => e.stopPropagation()}
+                                                                >
+                                                                    View Full Details →
+                                                                </Link>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            ) : (
+                // List View for completed/all/filtered
+                <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+                    {orders.length === 0 ? (
+                        <div className="p-8 text-center text-gray-600">
+                            No orders found
+                        </div>
+                    ) : <div className="rounded-md border">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Pesanan</TableHead>
+                                    <TableHead>Pelanggan</TableHead>
+                                    <TableHead>Layanan</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead>Prioritas</TableHead>
+                                    <TableHead>Umur (Jam)</TableHead>
+                                    <TableHead>Estimasi Selesai</TableHead>
+                                    <TableHead>Aksi</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {orders.map(order => {
+                                    const slaStatus = getSLAStatus(order.estimated_completion, order.current_status);
+                                    return (
+                                        <TableRow key={order.id}>
+                                            <TableCell>
+                                                <div className="font-medium">{order.order_number}</div>
+                                                <div className="text-xs text-muted-foreground">
+                                                    {new Date(order.created_at).toLocaleDateString('id-ID')}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="text-sm">{order.customer_name}</div>
+                                                <div className="text-xs text-muted-foreground">{order.customer_phone}</div>
+                                            </TableCell>
+                                            <TableCell>{order.service_name}</TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline" className={getStatusColor(order.current_status)}>
+                                                    {formatStatus(order.current_status)}
+                                                </Badge>
+                                                {slaStatus && (
+                                                    <div className={`mt-1 px-2 py-0.5 inline-flex text-xs font-semibold rounded border ${slaStatus.color}`}>
+                                                        {slaStatus.label}
+                                                    </div>
+                                                )}
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-1">
+                                                    <Badge variant="secondary" className={getPriorityColor(order.priority)}>
+                                                        {order.priority.toUpperCase()}
+                                                    </Badge>
+                                                    {order.is_priority && (
+                                                        <span className="text-orange-600">⚡</span>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                {parseFloat(String(order.aging_hours || 0)).toFixed(1)}h
+                                            </TableCell>
+                                            <TableCell>
+                                                {new Date(order.estimated_completion).toLocaleString('id-ID')}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Button variant="link" size="sm" asChild>
+                                                    <Link href={`/admin/orders/${order.id}`}>
+                                                        Lihat Detail
+                                                    </Link>
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
+                            </TableBody>
+                        </Table>
+                    </div>
+                    }
+                </div>
+            )}
         </div>
+
+
     );
 }

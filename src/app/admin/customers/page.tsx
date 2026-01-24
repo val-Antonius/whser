@@ -3,6 +3,15 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { CustomerSegment } from '@/types';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Search, UserPlus, RefreshCw, Filter } from "lucide-react";
 
 interface Customer {
     id: number;
@@ -75,172 +84,172 @@ export default function CustomersPage() {
     };
 
     return (
-        <div className="p-6">
-            <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="flex justify-between items-center mb-6">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Customer Management</h1>
-                        <p className="text-gray-600 mt-1">View and manage customer profiles</p>
-                    </div>
-                    <Link
-                        href="/admin/pos"
-                        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                    >
-                        + New Customer (via POS)
+        <div>
+            <PageHeader
+                title="Manajemen Pelanggan"
+                description="Lihat dan kelola profil pelanggan"
+                breadcrumbs={[
+                    { label: 'Dashboard', href: '/admin/dashboard/operations' },
+                    { label: 'Pelanggan' }
+                ]}
+                actions={
+                    <Link href="/admin/pos">
+                        <Button className="bg-purple-600 hover:bg-purple-700">
+                            <UserPlus className="mr-2 h-4 w-4" />
+                            Pelanggan Baru (via POS)
+                        </Button>
                     </Link>
-                </div>
+                }
+            />
 
-                {/* Filters */}
-                <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        {/* Search */}
-                        <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Search
-                            </label>
-                            <input
-                                type="text"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                placeholder="Name, phone, email, or customer number..."
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                            />
+            <div className="max-w-7xl mx-auto">
+                <Card className="mb-6">
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-lg font-medium flex items-center gap-2">
+                            <Filter className="h-4 w-4" /> Filter Pencarian
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            {/* Search */}
+                            <div className="md:col-span-2">
+                                <div className="relative">
+                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder="Cari nama, telepon, email, atau ID pelanggan..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="pl-9"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Segment Filter */}
+                            <div>
+                                <Select
+                                    value={segmentFilter}
+                                    onValueChange={setSegmentFilter}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Semua Segmen" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="ALL">Semua Segmen</SelectItem>
+                                        <SelectItem value={CustomerSegment.REGULAR}>Regular</SelectItem>
+                                        <SelectItem value={CustomerSegment.VIP}>VIP</SelectItem>
+                                        <SelectItem value={CustomerSegment.CORPORATE}>Corporate</SelectItem>
+                                        <SelectItem value={CustomerSegment.DORMITORY}>Dormitory</SelectItem>
+                                        <SelectItem value={CustomerSegment.HOTEL}>Hotel</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Status Filter */}
+                            <div>
+                                <Select
+                                    value={statusFilter}
+                                    onValueChange={setStatusFilter}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="active">Hanya Aktif</SelectItem>
+                                        <SelectItem value="inactive">Hanya Tidak Aktif</SelectItem>
+                                        <SelectItem value="all">Semua Status</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
 
-                        {/* Segment Filter */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Segment
-                            </label>
-                            <select
-                                value={segmentFilter}
-                                onChange={(e) => setSegmentFilter(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
+                            <p>
+                                Menampilkan {filteredCustomers.length} dari {customers.length} pelanggan
+                            </p>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={fetchCustomers}
+                                className="text-muted-foreground hover:text-foreground"
                             >
-                                <option value="">All Segments</option>
-                                <option value={CustomerSegment.REGULAR}>Regular</option>
-                                <option value={CustomerSegment.VIP}>VIP</option>
-                                <option value={CustomerSegment.CORPORATE}>Corporate</option>
-                                <option value={CustomerSegment.DORMITORY}>Dormitory</option>
-                                <option value={CustomerSegment.HOTEL}>Hotel</option>
-                            </select>
+                                <RefreshCw className="mr-2 h-3 w-3" />
+                                Refresh Data
+                            </Button>
                         </div>
+                    </CardContent>
+                </Card>
 
-                        {/* Status Filter */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Status
-                            </label>
-                            <select
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                            >
-                                <option value="active">Active Only</option>
-                                <option value="inactive">Inactive Only</option>
-                                <option value="all">All Customers</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div className="mt-4 flex items-center justify-between">
-                        <p className="text-sm text-gray-600">
-                            Showing {filteredCustomers.length} of {customers.length} customers
-                        </p>
-                        <button
-                            onClick={fetchCustomers}
-                            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm"
-                        >
-                            Refresh
-                        </button>
-                    </div>
-                </div>
-
-                {/* Customer List */}
-                <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-                    {isLoading ? (
-                        <div className="p-8 text-center text-gray-600">Loading customers...</div>
-                    ) : filteredCustomers.length === 0 ? (
-                        <div className="p-8 text-center text-gray-600">
-                            No customers found. {searchTerm && 'Try adjusting your search criteria.'}
-                        </div>
-                    ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead className="bg-gray-50 border-b border-gray-200">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Customer
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Contact
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Segment
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Status
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Joined
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Actions
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
+                <Card>
+                    <CardContent className="p-0">
+                        {isLoading ? (
+                            <div className="text-center py-12 text-muted-foreground">Memuat data pelanggan...</div>
+                        ) : filteredCustomers.length === 0 ? (
+                            <div className="text-center py-12 text-muted-foreground">
+                                Tidak ada pelanggan ditemukan. {searchTerm && 'Coba ubah kriteria pencarian.'}
+                            </div>
+                        ) : (
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead className="pl-6">Pelanggan</TableHead>
+                                        <TableHead>Kontak</TableHead>
+                                        <TableHead>Segmen</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead>Bergabung</TableHead>
+                                        <TableHead className="text-right pr-6">Aksi</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
                                     {filteredCustomers.map((customer) => (
-                                        <tr key={customer.id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="flex items-center">
-                                                    <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                                                        <span className="text-purple-600 font-semibold">
+                                        <TableRow key={customer.id}>
+                                            <TableCell className="pl-6">
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar className="h-9 w-9 bg-primary/10">
+                                                        <AvatarFallback className="text-primary font-semibold">
                                                             {customer.name.charAt(0).toUpperCase()}
-                                                        </span>
-                                                    </div>
-                                                    <div className="ml-4">
-                                                        <div className="text-sm font-medium text-gray-900">{customer.name}</div>
-                                                        <div className="text-xs text-gray-500">{customer.customer_number}</div>
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div>
+                                                        <div className="font-medium text-foreground">{customer.name}</div>
+                                                        <div className="text-xs text-muted-foreground">{customer.customer_number}</div>
                                                     </div>
                                                 </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-900">{customer.phone || 'N/A'}</div>
-                                                <div className="text-xs text-gray-500">{customer.email || 'No email'}</div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getSegmentColor(customer.segment)}`}>
-                                                    {customer.segment.toUpperCase()}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${customer.is_active
-                                                        ? 'bg-green-100 text-green-800'
-                                                        : 'bg-red-100 text-red-800'
-                                                    }`}>
-                                                    {customer.is_active ? 'ACTIVE' : 'INACTIVE'}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {new Date(customer.created_at).toLocaleDateString('id-ID')}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                                <Link
-                                                    href={`/admin/customers/${customer.id}`}
-                                                    className="text-purple-600 hover:text-purple-900 font-medium"
-                                                >
-                                                    View Profile →
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="text-sm">{customer.phone || '-'}</div>
+                                                <div className="text-xs text-muted-foreground">{customer.email || 'Tidak ada email'}</div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline" className={`capitalize font-normal ${getSegmentColor(customer.segment)} bg-opacity-20`}>
+                                                    {customer.segment}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant={customer.is_active ? "default" : "secondary"} className={customer.is_active ? "bg-green-600 hover:bg-green-700" : ""}>
+                                                    {customer.is_active ? 'Aktif' : 'Nonaktif'}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground">
+                                                {new Date(customer.created_at).toLocaleDateString('id-ID', {
+                                                    day: 'numeric',
+                                                    month: 'short',
+                                                    year: 'numeric'
+                                                })}
+                                            </TableCell>
+                                            <TableCell className="text-right pr-6">
+                                                <Link href={`/admin/customers/${customer.id}`}>
+                                                    <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80">
+                                                        Detail
+                                                    </Button>
                                                 </Link>
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
+                                </TableBody>
+                            </Table>
+                        )}
+                    </CardContent>
+                </Card>
             </div>
         </div>
     );

@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import AppLayout from '@/components/layout/AppLayout';
 
 export const metadata: Metadata = {
     title: 'Admin Dashboard - Laundry Management',
@@ -11,8 +12,8 @@ export default function AdminLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="min-h-screen bg-gray-50">
+        <AppLayout>
             {children}
-        </div>
+        </AppLayout>
     );
 }

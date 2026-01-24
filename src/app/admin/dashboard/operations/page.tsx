@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import MetricCard from '@/components/dashboard/MetricCard';
 import CapacityGauge from '@/components/dashboard/CapacityGauge';
 import ContributionMarginTable from '@/components/dashboard/ContributionMarginTable';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { Button } from '@/components/ui/button';
 
 export default function OperationalDashboard() {
     const [dateRange, setDateRange] = useState({
@@ -73,147 +75,145 @@ export default function OperationalDashboard() {
     }
 
     return (
-        <div className="p-6">
-            <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="mb-6 flex justify-between items-center">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Operational Dashboard</h1>
-                        <p className="text-gray-600 mt-1">Real-time performance metrics and KPIs</p>
-                    </div>
-
-                    {/* Date Range Selector */}
+        <div>
+            <PageHeader
+                title="Dashboard Operasional"
+                description="Metrik kinerja waktu nyata dan KPI"
+                breadcrumbs={[
+                    { label: 'Dashboard', href: '/admin/dashboard/operations' },
+                ]}
+                actions={
                     <div className="flex gap-3 items-center">
-                        <label className="text-sm font-medium text-gray-700">Period:</label>
+                        <label className="text-sm font-medium text-gray-700">Periode:</label>
                         <input
                             type="date"
                             value={dateRange.start_date}
                             onChange={(e) => setDateRange({ ...dateRange, start_date: e.target.value })}
                             className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
                         />
-                        <span className="text-gray-500">to</span>
+                        <span className="text-gray-500">s/d</span>
                         <input
                             type="date"
                             value={dateRange.end_date}
                             onChange={(e) => setDateRange({ ...dateRange, end_date: e.target.value })}
                             className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
                         />
-                        <button
+                        <Button
                             onClick={fetchAllMetrics}
-                            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium"
+                            size="sm"
                         >
                             Refresh
-                        </button>
+                        </Button>
                     </div>
-                </div>
+                }
+            />
 
-                {/* Key Metrics Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                    {/* SLA Compliance */}
-                    {metrics.sla && (
-                        <MetricCard
-                            title="SLA Compliance Rate"
-                            value={`${metrics.sla.overall.compliance_rate}%`}
-                            subtitle={`${metrics.sla.overall.on_time_orders} / ${metrics.sla.overall.total_orders} orders on time`}
-                            colorScheme={metrics.sla.overall.compliance_rate >= 90 ? 'green' : metrics.sla.overall.compliance_rate >= 75 ? 'yellow' : 'red'}
-                            icon={<span className="text-2xl">✓</span>}
-                        />
-                    )}
-
-                    {/* Rewash Rate */}
-                    {metrics.rewash && (
-                        <MetricCard
-                            title="Rewash/Redo Rate"
-                            value={`${metrics.rewash.overall.rewash_rate}%`}
-                            subtitle={`${metrics.rewash.overall.total_rewashes} rewashes • Rp ${metrics.rewash.overall.total_cost_impact.toLocaleString('id-ID')} cost`}
-                            colorScheme={metrics.rewash.overall.rewash_rate <= 2 ? 'green' : metrics.rewash.overall.rewash_rate <= 5 ? 'yellow' : 'red'}
-                            icon={<span className="text-2xl">↻</span>}
-                        />
-                    )}
-
-                    {/* Complaint Rate */}
-                    {metrics.complaints && (
-                        <MetricCard
-                            title="Complaint Rate"
-                            value={`${metrics.complaints.overall.complaint_rate}%`}
-                            subtitle={`${metrics.complaints.overall.total_complaints} complaints`}
-                            trend={{
-                                direction: metrics.complaints.overall.trend_direction === 'increasing' ? 'up' :
-                                    metrics.complaints.overall.trend_direction === 'decreasing' ? 'down' : 'neutral',
-                                value: `${Math.abs(metrics.complaints.overall.trend_percentage)}% vs prev period`
-                            }}
-                            colorScheme={metrics.complaints.overall.complaint_rate <= 1 ? 'green' : metrics.complaints.overall.complaint_rate <= 3 ? 'yellow' : 'red'}
-                            icon={<span className="text-2xl">⚠</span>}
-                        />
-                    )}
-                </div>
-
-                {/* Productivity & Capacity Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    {/* Productivity Metrics */}
-                    {metrics.productivity && (
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">Productivity Indicators</h3>
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-center p-3 bg-blue-50 rounded">
-                                    <span className="text-sm font-medium text-gray-700">Orders per Day</span>
-                                    <span className="text-xl font-bold text-blue-900">{metrics.productivity.orders_per_day}</span>
-                                </div>
-                                <div className="flex justify-between items-center p-3 bg-green-50 rounded">
-                                    <span className="text-sm font-medium text-gray-700">Avg Processing Time</span>
-                                    <span className="text-xl font-bold text-green-900">{metrics.productivity.avg_processing_hours}h</span>
-                                </div>
-                                <div className="flex justify-between items-center p-3 bg-purple-50 rounded">
-                                    <span className="text-sm font-medium text-gray-700">Job Completion Rate</span>
-                                    <span className="text-xl font-bold text-purple-900">{metrics.productivity.job_completion_rate}%</span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Capacity Utilization */}
-                    {metrics.capacity && (
-                        <CapacityGauge
-                            utilizationPercentage={metrics.capacity.utilization_percentage}
-                            activeOrders={metrics.capacity.current_active_orders}
-                            peakCapacity={metrics.capacity.estimated_peak_capacity}
-                        />
-                    )}
-                </div>
-
-                {/* Contribution Margin Table */}
-                {metrics.margin && metrics.margin.by_service && metrics.margin.by_service.length > 0 && (
-                    <div className="mb-6">
-                        <ContributionMarginTable data={metrics.margin.by_service} />
-                    </div>
+            {/* Key Metrics Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                {/* SLA Compliance */}
+                {metrics.sla && (
+                    <MetricCard
+                        title="Tingkat Kepatuhan SLA"
+                        value={`${metrics.sla.overall.compliance_rate}%`}
+                        subtitle={`${metrics.sla.overall.on_time_orders} / ${metrics.sla.overall.total_orders} pesanan tepat waktu`}
+                        colorScheme={metrics.sla.overall.compliance_rate >= 90 ? 'green' : metrics.sla.overall.compliance_rate >= 75 ? 'yellow' : 'red'}
+                        icon={<span className="text-2xl">✓</span>}
+                    />
                 )}
 
-                {/* Overall Margin Summary */}
-                {metrics.margin && (
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <MetricCard
-                            title="Total Revenue"
-                            value={`Rp ${metrics.margin.overall.total_revenue.toLocaleString('id-ID')}`}
-                            colorScheme="blue"
-                        />
-                        <MetricCard
-                            title="Inventory Cost"
-                            value={`Rp ${metrics.margin.overall.total_inventory_cost.toLocaleString('id-ID')}`}
-                            colorScheme="yellow"
-                        />
-                        <MetricCard
-                            title="Contribution Margin"
-                            value={`Rp ${metrics.margin.overall.contribution_margin.toLocaleString('id-ID')}`}
-                            colorScheme="green"
-                        />
-                        <MetricCard
-                            title="Margin %"
-                            value={`${metrics.margin.overall.margin_percentage}%`}
-                            colorScheme={metrics.margin.overall.margin_percentage >= 70 ? 'green' : metrics.margin.overall.margin_percentage >= 50 ? 'yellow' : 'red'}
-                        />
-                    </div>
+                {/* Rewash Rate */}
+                {metrics.rewash && (
+                    <MetricCard
+                        title="Tingkat Cuci Ulang"
+                        value={`${metrics.rewash.overall.rewash_rate}%`}
+                        subtitle={`${metrics.rewash.overall.total_rewashes} cuci ulang • Rp ${metrics.rewash.overall.total_cost_impact.toLocaleString('id-ID')} biaya`}
+                        colorScheme={metrics.rewash.overall.rewash_rate <= 2 ? 'green' : metrics.rewash.overall.rewash_rate <= 5 ? 'yellow' : 'red'}
+                        icon={<span className="text-2xl">↻</span>}
+                    />
+                )}
+
+                {/* Complaint Rate */}
+                {metrics.complaints && (
+                    <MetricCard
+                        title="Tingkat Keluhan"
+                        value={`${metrics.complaints.overall.complaint_rate}%`}
+                        subtitle={`${metrics.complaints.overall.total_complaints} keluhan`}
+                        trend={{
+                            direction: metrics.complaints.overall.trend_direction === 'increasing' ? 'up' :
+                                metrics.complaints.overall.trend_direction === 'decreasing' ? 'down' : 'neutral',
+                            value: `${Math.abs(metrics.complaints.overall.trend_percentage)}% vs periode lalu`
+                        }}
+                        colorScheme={metrics.complaints.overall.complaint_rate <= 1 ? 'green' : metrics.complaints.overall.complaint_rate <= 3 ? 'yellow' : 'red'}
+                        icon={<span className="text-2xl">⚠</span>}
+                    />
                 )}
             </div>
+
+            {/* Productivity & Capacity Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                {/* Productivity Metrics */}
+                {metrics.productivity && (
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Indikator Produktivitas</h3>
+                        <div className="space-y-4">
+                            <div className="flex justify-between items-center p-3 bg-blue-50 rounded">
+                                <span className="text-sm font-medium text-gray-700">Pesanan per Hari</span>
+                                <span className="text-xl font-bold text-blue-900">{metrics.productivity.orders_per_day}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-3 bg-green-50 rounded">
+                                <span className="text-sm font-medium text-gray-700">Rata-rata Waktu Proses</span>
+                                <span className="text-xl font-bold text-green-900">{metrics.productivity.avg_processing_hours} jam</span>
+                            </div>
+                            <div className="flex justify-between items-center p-3 bg-purple-50 rounded">
+                                <span className="text-sm font-medium text-gray-700">Tingkat Penyelesaian</span>
+                                <span className="text-xl font-bold text-purple-900">{metrics.productivity.job_completion_rate}%</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Capacity Utilization */}
+                {metrics.capacity && (
+                    <CapacityGauge
+                        utilizationPercentage={metrics.capacity.utilization_percentage}
+                        activeOrders={metrics.capacity.current_active_orders}
+                        peakCapacity={metrics.capacity.estimated_peak_capacity}
+                    />
+                )}
+            </div>
+
+            {/* Contribution Margin Table */}
+            {metrics.margin && metrics.margin.by_service && metrics.margin.by_service.length > 0 && (
+                <div className="mb-6">
+                    <ContributionMarginTable data={metrics.margin.by_service} />
+                </div>
+            )}
+
+            {/* Overall Margin Summary */}
+            {metrics.margin && (
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <MetricCard
+                        title="Total Pendapatan"
+                        value={`Rp ${metrics.margin.overall.total_revenue.toLocaleString('id-ID')}`}
+                        colorScheme="blue"
+                    />
+                    <MetricCard
+                        title="Biaya Inventori"
+                        value={`Rp ${metrics.margin.overall.total_inventory_cost.toLocaleString('id-ID')}`}
+                        colorScheme="yellow"
+                    />
+                    <MetricCard
+                        title="Margin Kontribusi"
+                        value={`Rp ${metrics.margin.overall.contribution_margin.toLocaleString('id-ID')}`}
+                        colorScheme="green"
+                    />
+                    <MetricCard
+                        title="Margin %"
+                        value={`${metrics.margin.overall.margin_percentage}%`}
+                        colorScheme={metrics.margin.overall.margin_percentage >= 70 ? 'green' : metrics.margin.overall.margin_percentage >= 50 ? 'yellow' : 'red'}
+                    />
+                </div>
+            )}
         </div>
     );
 }
