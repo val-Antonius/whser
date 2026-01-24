@@ -1025,5 +1025,93 @@ Successfully implemented **ALL** Phase 2.3 features:
 ---
 
 **Last Updated**: 2026-01-24  
-**Current Phase**: 2.3 (FULLY COMPLETE)  
-**Next Milestone**: Phase 2.4 - Advanced Customer Features
+**Current Phase**: 2.4 (FULLY COMPLETE)  
+**Next Milestone**: Phase 2.5 - Enhanced Operational Dashboard
+
+---
+
+## Phase 2.4: Advanced Customer Features
+
+**Status**: ✅ Complete
+
+**Completed Date**: 2026-01-24
+
+### Files Created
+
+**API Routes:**
+- [src/app/api/customers/[id]/loyalty/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/customers/%5Bid%5D/loyalty/route.ts)
+- [src/app/api/customers/[id]/contracts/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/customers/%5Bid%5D/contracts/route.ts)
+- [src/app/api/customers/[id]/complaints/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/customers/%5Bid%5D/complaints/route.ts)
+
+**User Interfaces:**
+- [src/components/customer/CustomerLoyaltyCard.tsx](file:///d:/toni/cloningRepo/whser/src/components/customer/CustomerLoyaltyCard.tsx)
+- [src/components/customer/ContractList.tsx](file:///d:/toni/cloningRepo/whser/src/components/customer/ContractList.tsx)
+- [src/components/customer/ComplaintHistory.tsx](file:///d:/toni/cloningRepo/whser/src/components/customer/ComplaintHistory.tsx)
+
+### Functionality Added
+
+1. **Volume-Based Loyalty Program**
+   - Tracks total value and points
+   - Automatic tier calc (Standard, Silver, Gold, Platinum)
+   - Risk score monitoring
+
+2. **Service Contracts (B2B)**
+   - Corporate, Hotel, Dormitory contract types
+   - SLA modifiers, Price modifiers
+   - Contract term dates
+
+3. **Complaint Management**
+   - Formal complaint tracking system
+   - Severity levels and status workflow
+
+### Database Changes
+
+**New Tables:** `customer_contracts`, `customer_loyalty_history`, `customer_complaints`
+**Schema Updates:** `customers` table added `loyalty_tier`, `total_lifetime_value`, `risk_score`
+
+---
+
+## Phase 2.5: Enhanced Operational Dashboard
+
+**Status**: ✅ Complete
+
+**Completed Date**: 2026-01-24
+
+### Files Created
+
+**API Routes:**
+- [src/app/api/metrics/sla-compliance/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/metrics/sla-compliance/route.ts)
+- [src/app/api/metrics/rewash-rate/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/metrics/rewash-rate/route.ts)
+- [src/app/api/metrics/contribution-margin/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/metrics/contribution-margin/route.ts)
+- [src/app/api/metrics/productivity/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/metrics/productivity/route.ts)
+- [src/app/api/metrics/capacity-utilization/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/metrics/capacity-utilization/route.ts)
+- [src/app/api/metrics/complaint-trends/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/metrics/complaint-trends/route.ts)
+
+**Dashboard Components:**
+- [src/components/dashboard/MetricCard.tsx](file:///d:/toni/cloningRepo/whser/src/components/dashboard/MetricCard.tsx)
+- [src/components/dashboard/CapacityGauge.tsx](file:///d:/toni/cloningRepo/whser/src/components/dashboard/CapacityGauge.tsx)
+- [src/components/dashboard/ContributionMarginTable.tsx](file:///d:/toni/cloningRepo/whser/src/components/dashboard/ContributionMarginTable.tsx)
+
+**Pages:**
+- [src/app/admin/dashboard/operations/page.tsx](file:///d:/toni/cloningRepo/whser/src/app/admin/dashboard/operations/page.tsx)
+
+### Functionality Added
+
+1. **SLA Compliance Rate**: Real-time tracking of on-time delivery performance
+2. **Rewash/Redo Rate**: Quality control metric with cost impact analysis
+3. **Contribution Margin**: Service profitability analysis (revenue - inventory costs)
+4. **Productivity Indicators**: Orders/day, processing time, job completion rate
+5. **Capacity Utilization**: Current load vs peak capacity with visual gauge
+6. **Complaint Trends**: Trend analysis with direction indicators
+
+### Key Features
+
+- **Date Range Filtering**: Customizable reporting periods
+- **Real-time Calculations**: All metrics calculated from live data
+- **Color-coded Indicators**: Visual status indicators for quick assessment
+- **Service Breakdown**: Detailed analysis per service type
+- **Responsive Design**: Works on all screen sizes
+
+**Last Updated**: 2026-01-24  
+**Current Phase**: 2.5 (COMPLETE)  
+**Next Milestone**: Phase 3 - Post-Operational Analytics Foundation

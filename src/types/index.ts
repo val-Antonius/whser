@@ -62,6 +62,9 @@ export interface Customer {
     created_at: Date;
     updated_at: Date;
     created_by?: number;
+    loyalty_tier?: LoyaltyTier;
+    total_lifetime_value?: number;
+    risk_score?: number;
 }
 
 // ============================================================================
@@ -506,4 +509,99 @@ export interface StockTransactionInput {
     notes?: string;
     order_id?: number;
     created_by: number;
+}
+
+// ============================================================================
+// PHASE 2.4: ADVANCED CUSTOMER FEATURES
+// ============================================================================
+
+export enum LoyaltyTier {
+    STANDARD = 'Standard',
+    SILVER = 'Silver',
+    GOLD = 'Gold',
+    PLATINUM = 'Platinum',
+}
+
+export enum ContractType {
+    CORPORATE = 'Corporate',
+    HOTEL = 'Hotel',
+    DORMITORY = 'Dormitory',
+    OTHER = 'Other',
+}
+
+export enum BillingCycle {
+    PER_ORDER = 'PerOrder',
+    MONTHLY = 'Monthly',
+    WEEKLY = 'Weekly',
+}
+
+export interface CustomerContract {
+    id: number;
+    customer_id: number;
+    contract_type: ContractType;
+    start_date: Date | string;
+    end_date: Date | string;
+    is_active: boolean;
+    sla_modifier_hours: number;
+    price_modifier_percent: number;
+    billing_cycle: BillingCycle;
+    terms_and_conditions?: string;
+    created_at: Date;
+    updated_at: Date;
+}
+
+export enum LoyaltyChangeType {
+    ORDER = 'Order',
+    BONUS = 'Bonus',
+    ADJUSTMENT = 'Adjustment',
+    PENALTY = 'Penalty',
+    TIER_CHANGE = 'TierChange',
+}
+
+export interface CustomerLoyaltyHistory {
+    id: number;
+    customer_id: number;
+    order_id?: number;
+    change_type: LoyaltyChangeType;
+    points_earned: number;
+    new_tier?: LoyaltyTier;
+    description?: string;
+    created_at: Date;
+}
+
+export enum ComplaintCategory {
+    DAMAGE = 'Damage',
+    DELAY = 'Delay',
+    SERVICE_QUALITY = 'Service Quality',
+    BILLING = 'Billing',
+    OTHER = 'Other',
+}
+
+export enum ComplaintSeverity {
+    LOW = 'Low',
+    MEDIUM = 'Medium',
+    HIGH = 'High',
+    CRITICAL = 'Critical',
+}
+
+export enum ComplaintStatus {
+    OPEN = 'Open',
+    IN_PROGRESS = 'In Progress',
+    RESOLVED = 'Resolved',
+    DISMISSED = 'Dismissed',
+}
+
+export interface CustomerComplaint {
+    id: number;
+    customer_id: number;
+    order_id?: number;
+    category: ComplaintCategory;
+    severity: ComplaintSeverity;
+    description: string;
+    status: ComplaintStatus;
+    resolution_notes?: string;
+    resolved_at?: Date;
+    created_by?: number;
+    created_at: Date;
+    updated_at: Date;
 }

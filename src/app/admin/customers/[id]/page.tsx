@@ -1,9 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { CustomerSegment } from '@/types';
+import CustomerLoyaltyCard from '@/components/customer/CustomerLoyaltyCard';
+import ContractList from '@/components/customer/ContractList';
+import ComplaintHistory from '@/components/customer/ComplaintHistory';
 
 interface CustomerDetail {
     customer: any;
@@ -17,7 +20,8 @@ interface CustomerDetail {
     };
 }
 
-export default function CustomerProfilePage({ params }: { params: { id: string } }) {
+export default function CustomerProfilePage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
     const router = useRouter();
     const [customerDetail, setCustomerDetail] = useState<CustomerDetail | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -40,12 +44,12 @@ export default function CustomerProfilePage({ params }: { params: { id: string }
 
     useEffect(() => {
         fetchCustomerDetail();
-    }, [params.id]);
+    }, [id]);
 
     const fetchCustomerDetail = async () => {
         setIsLoading(true);
         try {
-            const response = await fetch(`/api/customers/${params.id}`);
+            const response = await fetch(`/api/customers/${id}`);
             const data = await response.json();
             if (data.success) {
                 setCustomerDetail(data.data);
@@ -80,7 +84,7 @@ export default function CustomerProfilePage({ params }: { params: { id: string }
         setError('');
 
         try {
-            const response = await fetch(`/api/customers/${params.id}`, {
+            const response = await fetch(`/api/customers/${id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(editForm),
@@ -105,7 +109,7 @@ export default function CustomerProfilePage({ params }: { params: { id: string }
         if (!customerDetail) return;
 
         try {
-            const response = await fetch(`/api/customers/${params.id}`, {
+            const response = await fetch(`/api/customers/${id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -227,8 +231,8 @@ export default function CustomerProfilePage({ params }: { params: { id: string }
                                     <button
                                         onClick={toggleActiveStatus}
                                         className={`px-4 py-2 rounded-lg transition-colors ${customer.is_active
-                                                ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                                                : 'bg-green-100 text-green-700 hover:bg-green-200'
+                                            ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                                            : 'bg-green-100 text-green-700 hover:bg-green-200'
                                             }`}
                                     >
                                         {customer.is_active ? 'Deactivate' : 'Activate'}
@@ -418,7 +422,17 @@ export default function CustomerProfilePage({ params }: { params: { id: string }
                             )}
                         </div>
 
-                        {/* Preferences */}
+                        {/* New Loyalty Card Component */}
+                        <CustomerLoyaltyCard customerId={customerDetail.customer.id} />
+                    </div>
+
+                    {/* Middle & Right Columns: Contracts, History, Disputes */}
+                    <div className="lg:col-span-2 space-y-6">
+
+                        {/* New Contracts Component */}
+                        <ContractList customerId={customerDetail.customer.id} />
+
+                        {/* PREVIOUSLY: Preferences */}
                         <div className="bg-white rounded-lg shadow-sm p-6">
                             <h2 className="text-lg font-semibold text-gray-900 mb-4">Preferences</h2>
 
@@ -494,6 +508,9 @@ export default function CustomerProfilePage({ params }: { params: { id: string }
                             )}
                         </div>
 
+                        {/* New Contracts Component */}
+                        <ContractList customerId={customer.id} />
+
                         {/* Order History */}
                         <div className="bg-white rounded-lg shadow-sm p-6">
                             <h2 className="text-lg font-semibold text-gray-900 mb-4">
@@ -539,6 +556,9 @@ export default function CustomerProfilePage({ params }: { params: { id: string }
                                 </div>
                             )}
                         </div>
+
+                        {/* New Complaints Component */}
+                        <ComplaintHistory customerId={customer.id} />
                     </div>
 
                     {/* Right Column - Quick Info */}
@@ -578,13 +598,13 @@ export default function CustomerProfilePage({ params }: { params: { id: string }
                             <h3 className="font-semibold text-gray-900 mb-3">Quick Actions</h3>
                             <div className="space-y-2">
                                 <Link
-                                    href={`/admin/pos?customer=${params.id}`}
+                                    href={`/admin/pos?customer=${id}`}
                                     className="block w-full text-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                                 >
                                     Create New Order
                                 </Link>
                                 <Link
-                                    href={`/admin/orders?customer_id=${params.id}`}
+                                    href={`/admin/orders?customer_id=${id}`}
                                     className="block w-full text-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                                 >
                                     View All Orders
