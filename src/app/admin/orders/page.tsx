@@ -160,39 +160,53 @@ export default function OrdersListPage() {
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
                                     {orders.map((order) => (
-                                        <tr key={order.id} className="hover:bg-gray-50">
+                                        <tr key={order.id} className="hover:bg-gray-50 cursor-pointer transition-colors">
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm font-medium text-gray-900">{order.order_number}</div>
+                                                <Link href={`/admin/orders/${order.id}`} className="text-sm font-medium text-blue-600 hover:text-blue-800">
+                                                    {order.order_number}
+                                                </Link>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-900">{order.customer_name}</div>
-                                                <div className="text-sm text-gray-500">{order.customer_phone}</div>
+                                                <Link href={`/admin/orders/${order.id}`} className="block">
+                                                    <div className="text-sm text-gray-900">{order.customer_name}</div>
+                                                    <div className="text-sm text-gray-500">{order.customer_phone}</div>
+                                                </Link>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-900">{order.service_name}</div>
+                                                <Link href={`/admin/orders/${order.id}`} className="block">
+                                                    <div className="text-sm text-gray-900">{order.service_name}</div>
+                                                </Link>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.current_status)}`}>
-                                                    {formatStatus(order.current_status)}
-                                                </span>
+                                                <Link href={`/admin/orders/${order.id}`} className="block">
+                                                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.current_status)}`}>
+                                                        {formatStatus(order.current_status)}
+                                                    </span>
+                                                </Link>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getPaymentColor(order.payment_status)}`}>
-                                                    {formatStatus(order.payment_status)}
-                                                </span>
+                                                <Link href={`/admin/orders/${order.id}`} className="block">
+                                                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getPaymentColor(order.payment_status)}`}>
+                                                        {formatStatus(order.payment_status)}
+                                                    </span>
+                                                </Link>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-900">
-                                                    Rp {order.estimated_price.toLocaleString('id-ID')}
-                                                </div>
-                                                {order.payment_status === 'partial' && (
-                                                    <div className="text-xs text-gray-500">
-                                                        Paid: Rp {order.paid_amount.toLocaleString('id-ID')}
+                                                <Link href={`/admin/orders/${order.id}`} className="block">
+                                                    <div className="text-sm text-gray-900">
+                                                        Rp {order.estimated_price.toLocaleString('id-ID')}
                                                     </div>
-                                                )}
+                                                    {order.payment_status === 'partial' && (
+                                                        <div className="text-xs text-gray-500">
+                                                            Paid: Rp {order.paid_amount.toLocaleString('id-ID')}
+                                                        </div>
+                                                    )}
+                                                </Link>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {new Date(order.created_at).toLocaleDateString('id-ID')}
+                                                <Link href={`/admin/orders/${order.id}`} className="block">
+                                                    {new Date(order.created_at).toLocaleDateString('id-ID')}
+                                                </Link>
                                             </td>
                                         </tr>
                                     ))}

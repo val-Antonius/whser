@@ -167,6 +167,54 @@ export default function AdminDashboard() {
                         >
                             Customers
                         </Link>
+
+                        {/* Reports Dropdown */}
+                        <div className="relative group">
+                            <button className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 flex items-center">
+                                Reports
+                                <svg className="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <div className="absolute left-0 mt-0 w-56 bg-white border border-gray-200 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                                <Link href="/admin/reports/aging" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    ⏱️ Order Aging Report
+                                </Link>
+                                <Link href="/admin/reports/inventory-usage" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    📈 Inventory Usage
+                                </Link>
+                            </div>
+                        </div>
+
+                        {/* Inventory Dropdown */}
+                        <div className="relative group">
+                            <button className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 flex items-center">
+                                Inventory+
+                                <svg className="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <div className="absolute left-0 mt-0 w-64 bg-white border border-gray-200 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                                <Link href="/admin/inventory" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-semibold border-b">
+                                    📦 Stock Overview
+                                </Link>
+                                <div className="py-1">
+                                    <div className="px-4 py-1 text-xs font-semibold text-gray-500 uppercase">Advanced Features</div>
+                                    <Link href="/admin/inventory/consumption" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        📝 Consumption Templates
+                                    </Link>
+                                    <Link href="/admin/inventory/variance" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        ⚠️ Variance Analysis
+                                    </Link>
+                                    <Link href="/admin/inventory/waste" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        🗑️ Waste Tracking
+                                    </Link>
+                                    <Link href="/admin/inventory/bundles" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        📦 Bundles
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </nav>
@@ -183,8 +231,8 @@ export default function AdminDashboard() {
                         <button
                             onClick={() => setPeriod('today')}
                             className={`px-4 py-2 rounded-lg font-medium transition-colors ${period === 'today'
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
                                 }`}
                         >
                             Today
@@ -192,8 +240,8 @@ export default function AdminDashboard() {
                         <button
                             onClick={() => setPeriod('week')}
                             className={`px-4 py-2 rounded-lg font-medium transition-colors ${period === 'week'
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
                                 }`}
                         >
                             This Week
@@ -201,8 +249,8 @@ export default function AdminDashboard() {
                         <button
                             onClick={() => setPeriod('month')}
                             className={`px-4 py-2 rounded-lg font-medium transition-colors ${period === 'month'
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
                                 }`}
                         >
                             This Month

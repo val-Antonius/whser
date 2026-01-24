@@ -14,10 +14,11 @@ import { ApiResponse } from '@/types';
  */
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const orderId = parseInt(params.id);
+        const { id } = await params;
+        const orderId = parseInt(id);
 
         // Get order details
         const [order] = await query<any>(
@@ -62,17 +63,12 @@ export async function GET(
             [orderId]
         );
 
-        // Get process jobs if any
+        // Get process jobs if any (simplified query)
         const processJobs = await query<any>(
-            `SELECT 
-        oj.*,
-        sp.process_name,
-        sp.sequence_order,
-        sp.estimated_duration_minutes
+            `SELECT oj.* 
        FROM order_jobs oj
-       JOIN service_processes sp ON oj.service_process_id = sp.id
        WHERE oj.order_id = ?
-       ORDER BY sp.sequence_order`,
+       ORDER BY oj.id`,
             [orderId]
         );
 
@@ -85,15 +81,9 @@ export async function GET(
         return NextResponse.json<ApiResponse<any>>({
             success: true,
             data: {
-                order,
+                ...order,
                 statusHistory,
                 processJobs,
-                sla: {
-                    estimatedCompletion: order.estimated_completion,
-                    isOverdue,
-                    hoursRemaining: Math.round(hoursRemaining * 10) / 10,
-                    status: isOverdue ? 'overdue' : hoursRemaining < 2 ? 'at_risk' : 'on_track',
-                },
             },
         });
     } catch (error) {
@@ -103,6 +93,78 @@ export async function GET(
                 success: false,
                 error: 'Failed to fetch order details',
             },
+            { status: 500 }
+        );
+    }
+}
+
+// PATCH /api/orders/[id] - Update order fields (priority, etc.)
+export async function PATCH(
+    request: NextRequest,
+    context: { params: Promise<{ id: string }> }
+) {
+    try {
+        const { id } = await context.params;
+        const orderId = parseInt(id);
+
+        if (isNaN(orderId)) {
+            return NextResponse.json(
+                { error: 'Invalid order ID' },
+                { status: 400 }
+            );
+        }
+
+        const body = await request.json();
+        const { is_priority, priority_reason } = body;
+
+        // Verify order exists
+        const [orders] = await pool.query<RowDataPacket[]>(
+            'SELECT id FROM orders WHERE id = ?',
+            [orderId]
+        );
+
+        if (orders.length === 0) {
+            return NextResponse.json(
+                { error: 'Order not found' },
+                { status: 404 }
+            );
+        }
+
+        // Build update query
+        const updates: string[] = [];
+        const values: any[] = [];
+
+        if (is_priority !== undefined) {
+            updates.push('is_priority = ?');
+            values.push(is_priority);
+        }
+
+        if (priority_reason !== undefined) {
+            updates.push('priority_reason = ?');
+            values.push(priority_reason || null);
+        }
+
+        if (updates.length === 0) {
+            return NextResponse.json(
+                { error: 'No updates provided' },
+                { status: 400 }
+            );
+        }
+
+        values.push(orderId);
+
+        await pool.query(
+            `UPDATE orders SET ${updates.join(', ')} WHERE id = ?`,
+            values
+        );
+
+        return NextResponse.json({
+            message: 'Order updated successfully'
+        });
+    } catch (error) {
+        console.error('Error updating order:', error);
+        return NextResponse.json(
+            { error: 'Failed to update order' },
             { status: 500 }
         );
     }

@@ -1,0 +1,1029 @@
+# Development Checkpoint
+
+[Previous phases content abbreviated for brevity]
+
+---
+
+## Phase 1.5: Customer Management Module
+
+**Status**: ✅ Complete
+
+**Completed Date**: 2026-01-24
+
+### Files Created
+
+**API Routes:**
+- [src/app/api/customers/[id]/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/customers/%5Bid%5D/route.ts) - Customer detail and update API with order history and statistics
+
+**User Interfaces:**
+- [src/app/admin/customers/page.tsx](file:///d:/toni/cloningRepo/whser/src/app/admin/customers/page.tsx) - Customer list with search and filtering
+- [src/app/admin/customers/[id]/page.tsx](file:///d:/toni/cloningRepo/whser/src/app/admin/customers/%5Bid%5D/page.tsx) - Customer profile page with edit capabilities
+
+### Functionality Added
+
+1. **Customer Detail API**
+   - Fetch complete customer profile
+   - Parse JSON preferences field
+   - Retrieve order history (last 50 orders)
+   - Calculate customer statistics:
+     - Total orders count
+     - Completed orders count
+     - Total amount spent
+     - Pending payment amount
+     - Last order date
+   - JOIN with services for enriched order data
+
+2. **Customer Update API**
+   - PATCH endpoint for updating customer information
+   - Dynamic query building (only update provided fields)
+   - Update basic info (name, phone, email, address)
+   - Update segment classification
+   - Update preferences (JSON field)
+   - Update notes
+   - Toggle active/inactive status
+   - Automatic timestamp updates
+
+3. **Customer List Page**
+   - **Multi-Criteria Search**:
+     - Search by name (case-insensitive)
+     - Search by phone number
+     - Search by email
+     - Search by customer number
+     - Real-time filtering
+   - **Segment Filter**: Filter by customer segment (Regular/VIP/Corporate/Dormitory/Hotel)
+   - **Status Filter**: Active only, Inactive only, or All customers
+   - **Table Display**:
+     - Avatar with initial letter
+     - Customer name and number
+     - Contact information (phone, email)
+     - Segment badge with color coding
+     - Active/Inactive status badge
+     - Join date
+     - Link to profile page
+   - Result count display
+   - Refresh functionality
+
+4. **Customer Profile Page**
+   - **Statistics Dashboard** (4 cards):
+     - Total Orders
+     - Completed Orders
+     - Total Spent (Rupiah)
+     - Pending Payment (Rupiah)
+   - **Customer Information Section**:
+     - View mode: Display all customer details
+     - Edit mode: Inline editing of all fields
+     - Fields: Name, Phone, Email, Address, Segment, Notes
+     - Save/Cancel buttons in edit mode
+   - **Preferences Management**:
+     - Preferred Detergent
+     - Allergies
+     - Special Instructions
+     - Stored as JSON in database
+     - Editable in edit mode
+   - **Order History**:
+     - Complete transaction list
+     - Order number (clickable link)
+     - Service name
+     - Price and payment status
+     - Current order status
+     - Creation date
+     - Color-coded status badges
+   - **Quick Stats Sidebar**:
+     - Customer since date
+     - Last order date
+     - Average order value calculation
+   - **Quick Actions**:
+     - Create New Order button
+     - View All Orders button
+   - **Active/Inactive Toggle**:
+     - One-click status change
+     - Confirmation via button color
+     - Immediate update
+
+5. **Customer Statistics Calculation**
+   - Total orders: Count of all orders
+   - Completed orders: Count of completed/ready/closed orders
+   - Total spent: Sum of paid amounts
+   - Pending payment: Sum of unpaid order prices
+   - Average order value: Total spent / Total orders
+   - Last order date: Most recent order timestamp
+
+### Database Integration
+
+**Tables Used:**
+- `customers` - Customer master data with preferences JSON
+- `orders` - Order history
+- `services` - For order history enrichment
+
+**Key Operations:**
+- SELECT customer with JSON parsing
+- SELECT orders with JOIN to services
+- UPDATE customers with dynamic fields
+- JSON field manipulation for preferences
+
+### Testing Completed
+
+- [x] Customer list loads correctly
+- [x] Search filters work (name, phone, email, number)
+- [x] Segment filter works
+- [x] Status filter works
+- [x] Customer profile loads with statistics
+- [x] Order history displays correctly
+- [x] Edit mode enables/disables properly
+- [x] Customer update saves successfully
+- [x] Preferences update works
+- [x] Active/inactive toggle functions
+- [x] Statistics calculate correctly
+- [x] Quick actions link properly
+- [x] TypeScript compilation successful
+- [x] No console errors
+
+### Design Decisions
+
+1. **JSON Preferences Storage**
+   - Flexible schema for customer preferences
+   - Easy to add new preference fields
+   - Stored as JSON in database
+   - Parsed automatically in API
+   - Type-safe in TypeScript
+
+2. **Inline Editing Pattern**
+   - Toggle between view and edit modes
+   - All fields editable in one place
+   - Save/Cancel for user control
+   - No separate edit page needed
+   - Better UX for quick updates
+
+3. **Statistics on Profile**
+   - Immediate visibility of customer value
+   - Helps identify VIP customers
+   - Shows engagement level
+   - Calculated server-side for accuracy
+   - Cached in component state
+
+4. **Order History Integration**
+   - Shows complete transaction context
+   - Links to order details
+   - Color-coded for quick scanning
+   - Limited to 50 most recent
+   - Sorted by date descending
+
+5. **Multi-Criteria Search**
+   - Client-side filtering for speed
+   - Multiple search fields
+   - Real-time results
+   - Case-insensitive matching
+   - Combines with other filters
+
+6. **Segment-Based Organization**
+   - Color-coded badges
+   - Easy visual identification
+   - Supports business segmentation
+   - Filterable for targeted views
+
+### Known Issues
+
+None - All functionality working as expected.
+
+### Next Steps
+
+**Phase 1.6: Inventory Management Module**
+1. Inventory item master data interface
+2. Stock in/out recording
+3. Stock level display with visual indicators
+4. Minimum stock alerts
+5. Inventory transaction history
+
+---
+
+## Phase 2.1: Advanced POS Features
+
+**Status**: ✅ Complete
+
+**Completed Date**: 2026-01-24
+
+### Files Created
+
+**Database Migration:**
+- [database/migration_phase2.1.sql](file:///d:/toni/cloningRepo/whser/database/migration_phase2.1.sql) - Schema updates for advanced transaction management
+
+**Utility Libraries:**
+- [src/lib/authorization.ts](file:///d:/toni/cloningRepo/whser/src/lib/authorization.ts) - PIN-based authorization for sensitive operations
+- [src/lib/pricing.ts](file:///d:/toni/cloningRepo/whser/src/lib/pricing.ts) - Complex pricing rules and calculations
+
+**API Routes:**
+- [src/app/api/orders/[id]/payments/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/orders/%5Bid%5D/payments/route.ts) - Payment transaction management (GET/POST)
+- [src/app/api/orders/[id]/cancel/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/orders/%5Bid%5D/cancel/route.ts) - Order cancellation with authorization
+- [src/app/api/orders/[id]/void/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/orders/%5Bid%5D/void/route.ts) - Transaction void with authorization
+
+**Reusable Components:**
+- [src/components/CancelOrderModal.tsx](file:///d:/toni/cloningRepo/whser/src/components/CancelOrderModal.tsx) - Order cancellation modal
+- [src/components/VoidOrderModal.tsx](file:///d:/toni/cloningRepo/whser/src/components/VoidOrderModal.tsx) - Transaction void modal
+- [src/components/RecordPaymentModal.tsx](file:///d:/toni/cloningRepo/whser/src/components/RecordPaymentModal.tsx) - Payment recording modal
+
+**User Interfaces:**
+- [src/app/admin/orders/[id]/page.tsx](file:///d:/toni/cloningRepo/whser/src/app/admin/orders/%5Bid%5D/page.tsx) - Enhanced order detail page with transaction management
+
+**Files Modified:**
+- [src/app/admin/orders/page.tsx](file:///d:/toni/cloningRepo/whser/src/app/admin/orders/page.tsx) - Made order rows clickable
+- [src/app/api/orders/[id]/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/orders/%5Bid%5D/route.ts) - Fixed Next.js 15 async params
+
+### Database Schema Changes
+
+**New Tables Created:**
+
+1. **payment_transactions**
+   - Tracks all payment events (payment, deposit, refund, adjustment)
+   - Links to orders and users
+   - Stores payment method, reference number, notes
+   - Indexed by order_id and created_at
+
+2. **order_cancellations**
+   - Tracks cancellation events with complete audit trail
+   - Stores reason, refund amount, authorization details
+   - Links to orders and users
+   - Indexed by order_id and cancelled_at
+
+3. **order_voids**
+   - Tracks voided transactions
+   - Stores void reason, original amount, authorization details
+   - Links to orders and users
+   - Indexed by order_id and voided_at
+
+**Orders Table Enhancements:**
+- `deposit_amount` - Total deposits paid
+- `balance_due` - Remaining balance (total - paid)
+- `minimum_charge_applied` - Boolean flag for pricing transparency
+- `pricing_notes` - Notes about special pricing
+- `is_voided` - Void status flag
+- `voided_at` - Void timestamp
+- `parent_order_id` - For split orders (future use)
+- `is_combined` - For combined orders (future use)
+
+### Functionality Added
+
+1. **Order Cancellation with Authorization**
+   - Manager PIN-based authorization (default: 1234)
+   - Cancellation reason tracking (required)
+   - Optional refund amount processing
+   - Automatic refund transaction creation
+   - Order status update to CANCELLED
+   - Complete audit trail in order_cancellations table
+   - Status history logging
+   - Validation: Cannot cancel closed/cancelled/voided orders
+
+2. **Transaction Void with Reason**
+   - Manager authorization required
+   - Void reason tracking (required)
+   - Irreversible void marking (is_voided = TRUE)
+   - Original amount preservation
+   - Order status update to CANCELLED
+   - Complete audit trail in order_voids table
+   - Validation: Cannot void closed orders or already voided orders
+   - Prevents further modifications to voided orders
+
+3. **Partial Payment & Deposit Handling**
+   - **Payment Transaction Recording**:
+     - Transaction types: payment, deposit, refund, adjustment
+     - Payment method tracking (cash, transfer, card, other)
+     - Reference number for transfers/cards
+     - Optional notes field
+     - Created by user tracking
+   - **Balance Calculation**:
+     - Automatic paid_amount updates
+     - Deposit_amount tracking
+     - Balance_due calculation (total - paid)
+     - Payment status auto-update (unpaid/partial/paid)
+   - **Payment History**:
+     - Complete transaction timeline
+     - Transaction type badges (color-coded)
+     - Amount, method, reference display
+     - Timestamp and user tracking
+   - **Validation**:
+     - Amount must be > 0
+     - Cannot exceed balance due
+     - Cannot record payments on voided orders
+
+4. **Minimum Charge Enforcement**
+   - Automatic application during order creation
+   - Configured per service in services table
+   - Visual indicator on order detail page
+   - `minimum_charge_applied` flag for transparency
+   - Pricing notes for special cases
+   - Calculation: if (basePrice < minimumCharge) use minimumCharge
+
+5. **Complex Pricing Rules**
+   - **Pricing Utility Functions**:
+     - `applyMinimumCharge()` - Enforce minimum with breakdown
+     - `calculateBalanceDue()` - Total - deposit
+     - `validateDeposit()` - Cannot exceed total
+     - `calculatePaymentStatus()` - Auto-determine status
+     - `formatPricingBreakdown()` - Human-readable display
+   - **Pricing Transparency**:
+     - Calculation breakdown display
+     - Minimum charge indicator
+     - Pricing notes field
+     - Complete audit trail
+
+6. **Enhanced Order Detail Page**
+   - **Order Information Section**:
+     - Complete order details
+     - Customer information
+     - Service details
+     - Weight/quantity display
+     - Status badges (color-coded)
+     - Creation and estimated completion dates
+     - Special instructions display
+     - Minimum charge indicator
+   - **Payment Summary Card**:
+     - Total price
+     - Paid amount (green)
+     - Deposit amount (blue, if > 0)
+     - Balance due (large, bold)
+     - Payment status badge
+   - **Payment History Section**:
+     - All payment transactions listed
+     - Transaction type badges
+     - Amount display
+     - Payment method and reference
+     - Notes display
+     - Timestamp and user
+   - **Status History Timeline**:
+     - Chronological status changes
+     - Visual timeline with dots
+     - Status change notes
+     - Timestamp display
+   - **Action Buttons** (conditional display):
+     - Record Payment (green) - if balance > 0 and not voided
+     - Cancel Order (yellow) - if not closed/cancelled/voided
+     - Void Transaction (red) - if not closed/voided
+   - **Alert Banners**:
+     - Voided order warning (red)
+     - Cancelled order notice (yellow)
+
+7. **Reusable Modal Components**
+   - **CancelOrderModal**:
+     - Cancellation reason input (required)
+     - Refund amount input (defaults to paid amount)
+     - Authorization code input (required)
+     - Warning message about irreversibility
+     - Validation and error display
+     - Success callback
+   - **VoidOrderModal**:
+     - Void reason input (required)
+     - Authorization code input (required)
+     - Order amount display
+     - Strong warning about irreversibility
+     - Validation and error display
+     - Success callback
+   - **RecordPaymentModal**:
+     - Transaction type selection (payment/deposit)
+     - Amount input (required, validated)
+     - Payment method selection
+     - Reference number input (for transfers/cards)
+     - Notes input (optional)
+     - Order summary display (total, paid, balance)
+     - Remaining balance calculation
+     - Validation and error display
+     - Success callback
+
+8. **Authorization System**
+   - Simple PIN-based authorization for prototype
+   - Configurable via environment variable (MANAGER_PIN)
+   - Default PIN: 1234
+   - Required for:
+     - Order cancellation
+     - Transaction void
+     - Refund processing
+   - Validation function: `validateAuthorizationCode()`
+   - Future enhancement: User authentication & role-based permissions
+
+### Testing Completed
+
+- [x] Database migration runs successfully
+- [x] Payment transactions table created
+- [x] Order cancellations table created
+- [x] Order voids table created
+- [x] Orders table columns added
+- [x] Order detail page loads correctly
+- [x] Payment summary displays accurately
+- [x] Payment history shows all transactions
+- [x] Record payment modal opens and functions
+- [x] Payment amount validation works
+- [x] Balance due updates correctly
+- [x] Payment status auto-updates
+- [x] Cancel order modal opens
+- [x] Authorization validation works
+- [x] Order cancellation creates records
+- [x] Refund transaction recorded
+- [x] Void modal opens
+- [x] Transaction void marks order correctly
+- [x] Voided orders prevent further actions
+- [x] Minimum charge indicator displays
+- [x] Action buttons show/hide correctly
+- [x] Orders list clickable to detail page
+- [x] Next.js 15 async params compatibility
+- [x] TypeScript compilation successful
+- [x] No console errors
+
+### Design Decisions
+
+1. **Component-Based Architecture**
+   - Reusable modal components for maintainability
+   - Separation of concerns (UI vs logic)
+   - Consistent UI/UX across features
+   - Easy to test and modify
+
+2. **Complete Audit Trail**
+   - Every payment transaction recorded
+   - Cancellation reasons tracked
+   - Void reasons tracked
+   - Authorization codes logged
+   - User tracking for all actions
+   - Timestamp for all events
+
+3. **Payment Status Automation**
+   - Automatically calculated based on amounts
+   - No manual status setting
+   - Prevents inconsistencies
+   - Always accurate
+
+4. **Authorization for Sensitive Operations**
+   - Simple PIN for prototype
+   - Prevents accidental cancellations/voids
+   - Audit trail of who authorized
+   - Easy to upgrade to full auth system
+
+5. **Minimum Charge Transparency**
+   - Clear indicator when applied
+   - Pricing notes for explanation
+   - Flag in database for reporting
+   - Customer-facing transparency
+
+6. **Deposit vs Payment Distinction**
+   - Deposits tracked separately
+   - Both count toward paid_amount
+   - Useful for business reporting
+   - Customer payment flexibility
+
+7. **Void vs Cancel Distinction**
+   - Void: For transaction errors (irreversible)
+   - Cancel: For customer requests (with refund)
+   - Different audit trails
+   - Different business meanings
+
+### Known Issues
+
+None - All functionality working as expected.
+
+### Next Steps
+
+**Phase 2.2: Advanced Service Management** - ✅ **COMPLETED**
+
+---
+
+## Phase 2.2: Advanced Service Management
+
+**Status**: ✅ **COMPLETED**  
+**Date Completed**: 2026-01-24
+
+### Overview
+
+Phase 2.2 adds advanced operational features to the Service Management module, including exception handling, batch processing, priority marking, digital checklists, rewash tracking, SLA alerts, and order aging reports. This phase emphasizes a component-based architecture to prevent large files and improve maintainability.
+
+### New Files Created
+
+**Database Migration:**
+- [database/migration_phase2.2.sql](file:///d:/toni/cloningRepo/whser/database/migration_phase2.2.sql) - Creates 7 new tables and enhances orders table
+
+**Service Components (10):**
+- [src/components/service/ExceptionReportModal.tsx](file:///d:/toni/cloningRepo/whser/src/components/service/ExceptionReportModal.tsx) - Report exceptions
+- [src/components/service/ExceptionList.tsx](file:///d:/toni/cloningRepo/whser/src/components/service/ExceptionList.tsx) - Display exceptions
+- [src/components/service/BatchCreateModal.tsx](file:///d:/toni/cloningRepo/whser/src/components/service/BatchCreateModal.tsx) - Create batches
+- [src/components/service/BatchList.tsx](file:///d:/toni/cloningRepo/whser/src/components/service/BatchList.tsx) - Display batches
+- [src/components/service/PriorityMarker.tsx](file:///d:/toni/cloningRepo/whser/src/components/service/PriorityMarker.tsx) - Mark priority orders
+- [src/components/service/ProcessChecklist.tsx](file:///d:/toni/cloningRepo/whser/src/components/service/ProcessChecklist.tsx) - Manage checklists
+- [src/components/service/ChecklistProgress.tsx](file:///d:/toni/cloningRepo/whser/src/components/service/ChecklistProgress.tsx) - Progress visualization
+- [src/components/service/RewashModal.tsx](file:///d:/toni/cloningRepo/whser/src/components/service/RewashModal.tsx) - Record rewash events
+- [src/components/service/SLAAlertBanner.tsx](file:///d:/toni/cloningRepo/whser/src/components/service/SLAAlertBanner.tsx) - Display SLA alerts
+- [src/components/service/OrderAgingCard.tsx](file:///d:/toni/cloningRepo/whser/src/components/service/OrderAgingCard.tsx) - Show order age
+
+**API Endpoints (11):**
+- [src/app/api/orders/[id]/exceptions/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/orders/%5Bid%5D/exceptions/route.ts) - Exception management
+- [src/app/api/exceptions/[id]/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/exceptions/%5Bid%5D/route.ts) - Exception updates
+- [src/app/api/batches/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/batches/route.ts) - Batch listing/creation
+- [src/app/api/batches/[id]/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/batches/%5Bid%5D/route.ts) - Batch details/updates
+- [src/app/api/batches/[id]/orders/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/batches/%5Bid%5D/orders/route.ts) - Batch order management
+- [src/app/api/orders/[id]/checklists/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/orders/%5Bid%5D/checklists/route.ts) - Checklist management
+- [src/app/api/orders/[id]/rewash/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/orders/%5Bid%5D/rewash/route.ts) - Rewash tracking
+- [src/app/api/sla-alerts/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/sla-alerts/route.ts) - SLA alert listing
+- [src/app/api/sla-alerts/[id]/acknowledge/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/sla-alerts/%5Bid%5D/acknowledge/route.ts) - Alert acknowledgment
+- [src/app/api/reports/order-aging/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/reports/order-aging/route.ts) - Aging reports
+
+**Pages:**
+- [src/app/admin/reports/aging/page.tsx](file:///d:/toni/cloningRepo/whser/src/app/admin/reports/aging/page.tsx) - Order aging report with filters
+
+**Files Modified:**
+- [src/lib/db.ts](file:///d:/toni/cloningRepo/whser/src/lib/db.ts) - Added default export
+- [src/app/api/orders/[id]/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/orders/%5Bid%5D/route.ts) - Added PATCH for priority
+
+### Database Schema Changes
+
+**New Tables Created:**
+
+1. **order_exceptions**
+   - Tracks exceptions (stain treatment, delays, damage, missing items)
+   - Severity levels (low, medium, high, critical)
+   - Status tracking (open, in_progress, resolved, escalated)
+   - Resolution notes and timestamps
+   - Links to orders and users
+
+2. **processing_batches**
+   - Groups orders for efficient batch processing
+   - Batch types (wash, dry, iron, fold, mixed)
+   - Status tracking (pending, in_progress, completed, cancelled)
+   - Total orders and weight tracking
+   - Start/completion timestamps
+
+3. **batch_orders**
+   - Junction table linking orders to batches
+   - Prevents orders from being in multiple active batches
+   - Tracks when order was added to batch
+
+4. **process_checklists**
+   - Service-specific checklist items
+   - Process stage categorization (wash, dry, iron, fold, qc, pack)
+   - Required vs optional items
+   - Sequence ordering
+
+5. **order_checklist_completion**
+   - Tracks checklist completion per order
+   - Completion timestamps and user tracking
+   - Optional notes per item
+
+6. **rewash_events**
+   - Tracks rewash/redo as cost events (NOT new orders)
+   - Process stage specification
+   - Cost impact tracking
+   - Authorization and reason tracking
+
+7. **sla_alerts**
+   - SLA breach alerts (approaching, breached, critical)
+   - Hours remaining calculation
+   - Acknowledgment tracking
+
+**Orders Table Enhancements:**
+- `is_priority` - Priority order flag
+- `priority_reason` - Reason for priority status
+- `aging_hours` - Hours since order creation
+- `stage_aging_hours` - Hours in current processing stage
+
+### Functionality Added
+
+1. **Exception Handling Interface**
+   - Report exceptions with type, severity, description
+   - Track exception status (open → in_progress → resolved/escalated)
+   - Resolution notes and timestamps
+   - Color-coded severity indicators
+   - Exception history per order
+
+2. **Batch Processing Logic**
+   - Create batches by process type
+   - Add/remove orders from batches
+   - Auto-update batch totals (orders, weight)
+   - Batch status workflow (pending → in_progress → completed)
+   - Validation: Orders can only be in one active batch
+   - Cannot modify completed/cancelled batches
+
+3. **Priority Order Marking**
+   - Mark orders as priority with required reason
+   - Visual priority indicators (⚡ icon, orange styling)
+   - Priority filter in reports
+   - Reason tracking for accountability
+
+4. **Digital Checklist Per Process**
+   - Service-specific checklist items
+   - Required vs optional item distinction
+   - Sequence ordering
+   - Completion tracking per order
+   - Progress visualization (percentage, progress bar)
+   - Warning for incomplete required items
+
+5. **Rewash/Redo as Cost Event**
+   - Record rewash events (NOT new orders)
+   - Process stage specification
+   - Cost impact estimation
+   - Authorization required (manager PIN)
+   - Reason tracking
+   - Complete rewash history per order
+   - Total cost calculation
+
+6. **SLA Breach Alerts**
+   - Alert types: approaching, breached, critical
+   - Hours remaining calculation
+   - Color-coded alert banners
+   - Acknowledgment workflow
+   - Alert summary statistics
+   - Filter by type and acknowledgment status
+
+7. **Order Aging Reports**
+   - Comprehensive aging statistics
+   - Color-coded aging indicators:
+     - 🟢 Fresh (< 24h)
+     - 🟡 Normal (24-48h)
+     - 🟠 Aging (48-72h)
+     - 🔴 Critical (> 72h)
+   - Filters: status, priority, age range
+   - Sortable table with order details
+   - Average age calculation
+   - Group by status
+
+### Design Decisions
+
+1. **Component-Based Architecture**
+   - All service components in `src/components/service/` directory
+   - Prevents large files (following user requirement)
+   - Improves reusability and testability
+   - Consistent UI/UX patterns
+   - Easy to maintain and extend
+
+2. **Rewash as Cost Event**
+   - Rewash events are NOT new orders
+   - Preserves audit trail integrity
+   - Prevents revenue inflation
+   - Tracks true operational costs
+   - Links to original order
+
+3. **Batch Processing Validation**
+   - Orders can only be in ONE active batch
+   - Cannot add to completed/cancelled batches
+   - Auto-update batch totals
+   - Prevents data inconsistencies
+
+4. **Priority Accountability**
+   - Reason required for priority marking
+   - Tracks who marked and when
+   - Helps identify priority patterns
+   - Improves customer service
+
+5. **Service-Specific Checklists**
+   - Different checklists per service type
+   - Required items enforced
+   - Sequence ordering for workflow
+   - Completion tracking per order
+
+6. **Aging Color Coding**
+   - Visual indicators for quick assessment
+   - Consistent color scheme across UI
+   - Helps identify bottlenecks
+   - Prioritize old orders
+
+### Sample Data Included
+
+Migration includes sample checklist items for:
+- Wash & Fold Service (10 items)
+- Dry Cleaning Service (9 items)
+- Ironing Service (5 items)
+
+### Database Migration Instructions
+
+> [!WARNING]
+> PowerShell doesn't support `<` redirection. Use one of these methods:
+
+**Option 1: MySQL Workbench (Recommended)**
+1. Open MySQL Workbench
+2. Connect to database
+3. Open migration_phase2.2.sql
+4. Execute script
+
+**Option 2: Command Prompt**
+```cmd
+cd d:\toni\cloningRepo\whser
+mysql -u root -p laundry_db < database\migration_phase2.2.sql
+```
+
+**Option 3: PowerShell with Get-Content**
+```powershell
+Get-Content database\migration_phase2.2.sql | mysql -u root -p laundry_db
+```
+
+### Next Steps
+
+**Phase 2.3: Advanced Customer Features**
+1. Customer loyalty program
+2. Customer communication preferences
+3. Order history analytics
+4. Customer segmentation
+5. Automated notifications
+
+---
+
+## Summary
+
+**Phases Completed**: Phase 1 + Phase 2.1 + Phase 2.2
+
+**Current Status**: Ready to begin Phase 2.3 - Advanced Customer Features
+
+**System Capabilities**:
+- ✅ Database foundation (30+ tables, seed data)
+- ✅ Role-based routing (Admin/Owner separation)
+- ✅ POS Module - Complete order creation workflow
+- ✅ Service Management - Complete workflow engine with SLA tracking
+- ✅ Customer Management - Profile management with history tracking
+- ✅ Inventory Management - Stock tracking with transactions
+- ✅ Dashboard - Real-time metrics and analytics
+- ✅ **Advanced POS Features - Transaction management with authorization**
+- ✅ **Advanced Service Management - Exception handling, batch processing, checklists, rewash tracking, SLA alerts, aging reports**
+- ⏳ Advanced Customer Features - Next
+- ⏳ Inventory Optimization - Phase 2.4
+- ⏳ Reporting Module - Phase 2.5
+
+**Application URLs**:
+- Home/Role Selector: http://localhost:3000
+- Admin Dashboard: http://localhost:3000/admin/dashboard
+- POS: http://localhost:3000/admin/pos
+- Orders List: http://localhost:3000/admin/orders
+- Order Detail: http://localhost:3000/admin/orders/[id]
+- Service Management: http://localhost:3000/admin/services
+- Customer List: http://localhost:3000/admin/customers
+- Customer Profile: http://localhost:3000/admin/customers/[id]
+- Inventory: http://localhost:3000/admin/inventory
+- **Order Aging Report**: http://localhost:3000/admin/reports/aging
+- Owner Analytics: http://localhost:3000/owner/analytics
+
+---
+
+## Phase 2.3: Advanced Inventory Features (FULLY COMPLETE)
+
+**Status**: ✅ Complete (All Features)
+
+**Completed Date**: 2026-01-24
+
+### Implementation Summary
+
+Successfully implemented **ALL** Phase 2.3 features:
+- ✅ Consumption templates and tracking
+- ✅ Variance analysis with severity levels
+- ✅ Waste tracking with authorization
+- ✅ Inventory bundling (fully activated)
+- ✅ Usage reports with analytics
+- ✅ Cost attribution per order
+
+### Files Created
+
+**Database Migration:**
+- [database/migration_phase2.3.sql](file:///d:/toni/cloningRepo/whser/database/migration_phase2.3.sql) - Schema changes with conditional column checks
+
+**Components (src/components/inventory/):**
+- [ConsumptionTemplateModal.tsx](file:///d:/toni/cloningRepo/whser/src/components/inventory/ConsumptionTemplateModal.tsx) - Create consumption templates
+- [ConsumptionTemplateList.tsx](file:///d:/toni/cloningRepo/whser/src/components/inventory/ConsumptionTemplateList.tsx) - Display templates grouped by service
+- [VarianceAnalysisCard.tsx](file:///d:/toni/cloningRepo/whser/src/components/inventory/VarianceAnalysisCard.tsx) - Variance display with severity indicators
+- [WasteReportModal.tsx](file:///d:/toni/cloningRepo/whser/src/components/inventory/WasteReportModal.tsx) - Report waste with authorization
+- [WasteList.tsx](file:///d:/toni/cloningRepo/whser/src/components/inventory/WasteList.tsx) - Waste event history table
+- [BundleCreateModal.tsx](file:///d:/toni/cloningRepo/whser/src/components/inventory/BundleCreateModal.tsx) - Create inventory bundles
+- [BundleList.tsx](file:///d:/toni/cloningRepo/whser/src/components/inventory/BundleList.tsx) - Display bundles with item counts
+- [CostAttributionCard.tsx](file:///d:/toni/cloningRepo/whser/src/components/inventory/CostAttributionCard.tsx) - Show inventory costs and profit margin
+
+**API Routes:**
+- [src/app/api/inventory/consumption-templates/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/inventory/consumption-templates/route.ts) - GET, POST templates
+- [src/app/api/inventory/variance/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/inventory/variance/route.ts) - GET variances with summary
+- [src/app/api/inventory/variance/[id]/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/inventory/variance/%5Bid%5D/route.ts) - PATCH variance status
+- [src/app/api/inventory/waste/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/inventory/waste/route.ts) - GET, POST waste events
+- [src/app/api/inventory/bundles/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/inventory/bundles/route.ts) - GET, POST bundles
+- [src/app/api/inventory/bundles/[id]/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/inventory/bundles/%5Bid%5D/route.ts) - GET, PATCH, DELETE bundle
+- [src/app/api/inventory/bundles/[id]/items/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/inventory/bundles/%5Bid%5D/items/route.ts) - POST, DELETE bundle items
+- [src/app/api/reports/inventory-usage/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/reports/inventory-usage/route.ts) - GET usage report
+- [src/app/api/reports/cost-attribution/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/reports/cost-attribution/route.ts) - GET cost attribution
+
+**User Interfaces:**
+- [src/app/admin/inventory/consumption/page.tsx](file:///d:/toni/cloningRepo/whser/src/app/admin/inventory/consumption/page.tsx) - Consumption template management
+- [src/app/admin/inventory/variance/page.tsx](file:///d:/toni/cloningRepo/whser/src/app/admin/inventory/variance/page.tsx) - Variance analysis dashboard
+- [src/app/admin/inventory/waste/page.tsx](file:///d:/toni/cloningRepo/whser/src/app/admin/inventory/waste/page.tsx) - Waste tracking page
+- [src/app/admin/inventory/bundles/page.tsx](file:///d:/toni/cloningRepo/whser/src/app/admin/inventory/bundles/page.tsx) - Bundle management
+- [src/app/admin/reports/inventory-usage/page.tsx](file:///d:/toni/cloningRepo/whser/src/app/admin/reports/inventory-usage/page.tsx) - Usage reports with analytics
+
+**Enhanced Pages:**
+- [src/app/admin/orders/[id]/page.tsx](file:///d:/toni/cloningRepo/whser/src/app/admin/orders/%5Bid%5D/page.tsx) - Added CostAttributionCard integration
+
+### Database Schema Changes
+
+**New Tables Created:**
+
+1. **service_consumption_templates**
+   - Links services to inventory items with estimated quantities
+   - Defines expected consumption per service type
+   - Unique constraint on service_id + inventory_item_id
+   - Sample data included for Wash & Fold and Dry Cleaning
+
+2. **order_inventory_consumption**
+   - Tracks actual vs estimated consumption per order
+   - Calculates variance (actual - estimated)
+   - Links to inventory transactions
+   - Indexed by order_id and inventory_item_id
+
+3. **inventory_variance**
+   - Records significant consumption variances
+   - Severity levels: low (<10%), medium (10-25%), high (25-50%), critical (>50%)
+   - Status workflow: pending → investigating → resolved
+   - Tracks investigation and resolution notes
+
+4. **inventory_waste**
+   - Records waste/loss events with authorization
+   - Waste types: spillage, expiration, damage, theft, contamination, other
+   - Calculates cost impact from current unit cost
+   - Requires manager authorization (PIN-based)
+
+5. **inventory_bundles**
+   - Groups multiple inventory items into bundles
+   - Bundle code must be unique
+   - Active/inactive status flag
+   - Used for bulk operations and simplified tracking
+
+6. **bundle_items**
+   - Junction table for bundle contents
+   - Specifies quantity per item in bundle
+   - Cascade delete when bundle is removed
+
+**inventory_transactions Table Enhancements:**
+- `cost_per_unit` - Unit cost at time of transaction
+- `attributed_order_id` - Links transaction to specific order
+- Conditional ALTER statements to prevent duplicate column errors
+
+### Functionality Added
+
+1. **Consumption Template Management**
+   - Define expected inventory usage per service
+   - Service-item pairing with estimated quantities
+   - Unit specification (ml, g, kg, l, pieces, units)
+   - Grouped display by service name
+   - Duplicate prevention (unique service-item combination)
+
+2. **Variance Analysis Dashboard**
+   - Automatic variance calculation (actual - estimated)
+   - Severity-based color coding (green/yellow/orange/red)
+   - Summary statistics (total, pending, investigating, resolved, critical, high)
+   - Status workflow management
+   - Filter by status and severity
+   - Investigation and resolution note tracking
+
+3. **Waste Tracking with Authorization**
+   - Manager PIN-based authorization (uses existing MANAGER_PIN env var)
+   - Waste type categorization (6 types)
+   - Mandatory reason field
+   - Automatic cost impact calculation
+   - Total cost impact summary
+   - Waste event history table
+   - Audit trail with reporter information
+
+4. **Inventory Bundling**
+   - Create bundles with unique codes
+   - Add/remove items from bundles
+   - View bundle contents with quantities
+   - Active/inactive status management
+   - Item count tracking
+   - Bundle details modal
+
+5. **Usage Reports**
+   - Comprehensive usage analytics
+   - Date range filtering
+   - Summary statistics (items, consumed, wasted, orders)
+   - Per-item breakdown with averages
+   - Consumption vs waste comparison
+   - Order count per item
+
+6. **Cost Attribution**
+   - Inventory cost tracking per order
+   - Item-level cost breakdown
+   - Profit margin calculation
+   - Profit percentage display
+   - Integration in order detail page
+   - Visual cost vs price comparison
+
+7. **Component-Based Architecture**
+   - 8 reusable components in `src/components/inventory/`
+   - Modular design for easy maintenance
+   - Consistent styling and UX patterns
+   - Full feature coverage
+
+### Design Decisions
+
+1. **Complete Feature Set**: Implemented all planned Phase 2.3 features
+2. **Severity Thresholds**: Automatic variance flagging based on percentage deviation
+3. **Authorization Pattern**: Reused existing PIN-based authorization from Phase 2.1
+4. **Conditional Migrations**: Added existence checks to prevent errors on re-run
+5. **Cost Impact**: Calculated from current unit_cost at time of waste reporting
+6. **Modular Components**: All inventory UI components in dedicated directory
+7. **Profit Visibility**: Cost attribution shows true order profitability
+8. **Bundle Flexibility**: Bundles can be activated/deactivated without deletion
+
+### Testing Status
+
+- ✅ Database migration successful
+- ✅ Consumption template creation tested
+- ✅ Variance analysis workflow tested
+- ✅ Waste reporting with authorization tested
+- ✅ Bundle management tested
+- ✅ Usage reports tested
+- ✅ Cost attribution integrated and tested
+
+### Environment Variables
+
+- `MANAGER_PIN` - Manager authorization code (default: 1234)
+
+### Key Features Summary
+
+**Consumption Management:**
+- Template-based consumption tracking
+- Service-specific patterns
+- Variance detection and investigation
+
+**Cost Control:**
+- Waste tracking with authorization
+- Cost impact calculation
+- Profit margin visibility
+
+**Bulk Operations:**
+- Inventory bundling
+- Multi-item management
+- Simplified tracking
+
+**Analytics:**
+- Usage reports with filtering
+- Cost attribution per order
+- Consumption patterns analysis
+
+---
+
+## Project Summary
+
+### Current Status: Phase 2.3 FULLY Complete
+
+**Total Implementation Progress:**
+- ✅ Phase 1.1: Database Schema & Core Setup
+- ✅ Phase 1.2: Service Management Module
+- ✅ Phase 1.3: Order Management Module
+- ✅ Phase 1.4: Inventory Management Module
+- ✅ Phase 1.5: Customer Management Module
+- ✅ Phase 2.1: Advanced POS Features
+- ✅ Phase 2.2: Advanced Service Management
+- ✅ Phase 2.3: Advanced Inventory Features (FULLY COMPLETE)
+- ⏳ Phase 2.4: Advanced Customer Features (Pending)
+- ⏳ Phase 3: Post-Operational Analytics (Pending)
+
+### Architecture Highlights
+
+**Component Organization:**
+- `/components/service/` - 10 service management components
+- `/components/inventory/` - 8 inventory management components
+- Modular, reusable design pattern established
+
+**Database Tables:** 46 tables
+**API Endpoints:** 59 routes
+**User Pages:** 20 admin interfaces
+
+### Key Features Operational
+
+1. **POS & Order Management**
+   - Multi-step order creation
+   - Deposit and payment tracking
+   - Order cancellation and void with authorization
+   - Payment history and status tracking
+
+2. **Service Management**
+   - Exception handling
+   - Batch processing
+   - Priority order marking
+   - Digital checklists
+   - Rewash tracking as cost events
+   - SLA breach alerts
+   - Order aging reports
+
+3. **Inventory Management** (COMPLETE)
+   - Basic stock tracking
+   - Transaction history
+   - Consumption templates
+   - Variance analysis with severity levels
+   - Waste tracking with authorization
+   - Inventory bundling
+   - Usage reports with analytics
+   - Cost attribution per order
+
+4. **Customer Management**
+   - Customer profiles
+   - Segmentation
+   - Order history
+   - Statistics tracking
+
+### Technical Stack
+
+- **Framework**: Next.js 15+ (App Router)
+- **Database**: MySQL with mysql2
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS (minimal, mostly vanilla CSS)
+- **Authorization**: PIN-based (temporary, pending full auth system)
+
+---
+
+**Last Updated**: 2026-01-24  
+**Current Phase**: 2.3 (FULLY COMPLETE)  
+**Next Milestone**: Phase 2.4 - Advanced Customer Features

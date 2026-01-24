@@ -4,17 +4,75 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { OrderStatus } from '@/types';
 
+// Import Phase 2.2 Components
+import SLAAlertBanner from '@/components/service/SLAAlertBanner';
+import OrderAgingCard from '@/components/service/OrderAgingCard';
+import PriorityMarker from '@/components/service/PriorityMarker';
+import ExceptionList from '@/components/service/ExceptionList';
+import ExceptionReportModal from '@/components/service/ExceptionReportModal';
+import ProcessChecklist from '@/components/service/ProcessChecklist';
+import RewashModal from '@/components/service/RewashModal';
+import BatchCreateModal from '@/components/service/BatchCreateModal';
+import BatchList from '@/components/service/BatchList';
+
 interface QueueOrder {
     id: number;
     order_number: string;
     customer_name: string;
     customer_phone: string;
     service_name: string;
+    service_id: number;
     current_status: string;
     priority: string;
+    is_priority: boolean;
+    priority_reason?: string;
     estimated_completion: string;
     created_at: string;
     estimated_price: number;
+    aging_hours: number;
+    stage_aging_hours: number;
+}
+
+interface Exception {
+    id: number;
+    exception_type: string;
+    description: string;
+    severity: string;
+    status: string;
+    reported_at: string;
+    resolved_at?: string;
+    resolution_notes?: string;
+}
+
+interface ChecklistItem {
+    id: number;
+    checklist_item: string;
+    is_required: boolean;
+    is_completed: boolean;
+    completed_at?: string;
+    completed_by?: number;
+}
+
+interface SLAAlert {
+    id: number;
+    order_id: number;
+    alert_type: 'approaching' | 'breached' | 'critical';
+    alert_message: string;
+    hours_remaining: number | null;
+    is_acknowledged: boolean;
+    created_at: string;
+}
+
+interface Batch {
+    id: number;
+    batch_number: string;
+    batch_type: string;
+    status: string;
+    total_orders: number;
+    total_weight: number;
+    created_at: string;
+    started_at?: string;
+    completed_at?: string;
 }
 
 export default function ServiceManagementPage() {
@@ -23,8 +81,19 @@ export default function ServiceManagementPage() {
     const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'all'>('active');
     const [statusFilter, setStatusFilter] = useState('');
 
+    // Phase 2.2 State
+    const [slaAlerts, setSlaAlerts] = useState<SLAAlert[]>([]);
+    const [batches, setBatches] = useState<Batch[]>([]);
+    const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+    const [showExceptionModal, setShowExceptionModal] = useState(false);
+    const [showRewashModal, setShowRewashModal] = useState(false);
+    const [showBatchModal, setShowBatchModal] = useState(false);
+    const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set());
+
     useEffect(() => {
         fetchOrders();
+        fetchSLAAlerts();
+        fetchBatches();
     }, [activeTab, statusFilter]);
 
     const fetchOrders = async () => {
@@ -33,7 +102,6 @@ export default function ServiceManagementPage() {
             let url = '/api/orders?limit=100';
 
             if (activeTab === 'active') {
-                // Active orders: not completed, ready for pickup, closed, or cancelled
                 url = '/api/orders?limit=100';
             } else if (activeTab === 'completed') {
                 url = '/api/orders?status=completed&limit=100';
@@ -46,7 +114,6 @@ export default function ServiceManagementPage() {
             const response = await fetch(url);
             const data = await response.json();
             if (data.success) {
-                // Filter active orders if needed
                 let filteredOrders = data.data;
                 if (activeTab === 'active') {
                     filteredOrders = data.data.filter((order: QueueOrder) =>
@@ -60,6 +127,52 @@ export default function ServiceManagementPage() {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const fetchSLAAlerts = async () => {
+        try {
+            const response = await fetch('/api/sla-alerts?acknowledged=false');
+            const data = await response.json();
+            setSlaAlerts(data.alerts || []);
+        } catch (error) {
+            console.error('Error fetching SLA alerts:', error);
+        }
+    };
+
+    const fetchBatches = async () => {
+        try {
+            const response = await fetch('/api/batches?status=pending&status=in_progress');
+            const data = await response.json();
+            setBatches(data.batches || []);
+        } catch (error) {
+            console.error('Error fetching batches:', error);
+        }
+    };
+
+    const handleAcknowledgeAlert = async (alertId: number) => {
+        try {
+            await fetch(`/api/sla-alerts/${alertId}/acknowledge`, {
+                method: 'POST',
+            });
+            fetchSLAAlerts();
+        } catch (error) {
+            console.error('Error acknowledging alert:', error);
+        }
+    };
+
+    const handleBatchClick = (batchId: number) => {
+        // Navigate to batch detail or open modal
+        window.location.href = `/admin/batches/${batchId}`;
+    };
+
+    const toggleOrderExpansion = (orderId: number) => {
+        const newExpanded = new Set(expandedOrders);
+        if (newExpanded.has(orderId)) {
+            newExpanded.delete(orderId);
+        } else {
+            newExpanded.add(orderId);
+        }
+        setExpandedOrders(newExpanded);
     };
 
     const getStatusColor = (status: string) => {
@@ -108,17 +221,6 @@ export default function ServiceManagementPage() {
         return { label: 'ON TRACK', color: 'bg-green-100 text-green-800 border-green-200' };
     };
 
-    const groupOrdersByStatus = () => {
-        const grouped: Record<string, QueueOrder[]> = {};
-        orders.forEach(order => {
-            if (!grouped[order.current_status]) {
-                grouped[order.current_status] = [];
-            }
-            grouped[order.current_status].push(order);
-        });
-        return grouped;
-    };
-
     const statusOrder = [
         OrderStatus.RECEIVED,
         OrderStatus.WAITING_FOR_PROCESS,
@@ -137,8 +239,35 @@ export default function ServiceManagementPage() {
                 {/* Header */}
                 <div className="mb-6">
                     <h1 className="text-3xl font-bold text-gray-900">Service Management</h1>
-                    <p className="text-gray-600 mt-1">Track and manage order workflow</p>
+                    <p className="text-gray-600 mt-1">Track and manage order workflow with advanced features</p>
                 </div>
+
+                {/* SLA Alert Banner */}
+                <SLAAlertBanner alerts={slaAlerts} onAcknowledge={handleAcknowledgeAlert} />
+
+                {/* Action Buttons */}
+                <div className="mb-6 flex gap-3">
+                    <button
+                        onClick={() => setShowBatchModal(true)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                        + Create Batch
+                    </button>
+                    <Link
+                        href="/admin/reports/aging"
+                        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                    >
+                        📊 View Aging Report
+                    </Link>
+                </div>
+
+                {/* Active Batches Section */}
+                {batches.length > 0 && (
+                    <div className="mb-6">
+                        <h2 className="text-xl font-bold mb-3">Active Batches</h2>
+                        <BatchList batches={batches} onBatchClick={handleBatchClick} />
+                    </div>
+                )}
 
                 {/* Tabs */}
                 <div className="bg-white rounded-lg shadow-sm mb-6">
@@ -150,8 +279,8 @@ export default function ServiceManagementPage() {
                                     setStatusFilter('');
                                 }}
                                 className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'active'
-                                        ? 'border-green-500 text-green-600'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                    ? 'border-green-500 text-green-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                     }`}
                             >
                                 Active Orders ({orders.filter(o => !['completed', 'ready_for_pickup', 'closed', 'cancelled'].includes(o.current_status)).length})
@@ -162,8 +291,8 @@ export default function ServiceManagementPage() {
                                     setStatusFilter('completed');
                                 }}
                                 className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'completed'
-                                        ? 'border-green-500 text-green-600'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                    ? 'border-green-500 text-green-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                     }`}
                             >
                                 Completed
@@ -174,8 +303,8 @@ export default function ServiceManagementPage() {
                                     setStatusFilter('');
                                 }}
                                 className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'all'
-                                        ? 'border-green-500 text-green-600'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                    ? 'border-green-500 text-green-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                     }`}
                             >
                                 All Orders
@@ -212,7 +341,7 @@ export default function ServiceManagementPage() {
                     </div>
                 </div>
 
-                {/* Order Queue - Kanban Style */}
+                {/* Order Queue - Enhanced Kanban Style */}
                 {isLoading ? (
                     <div className="text-center py-12 text-gray-600">Loading orders...</div>
                 ) : activeTab === 'active' && !statusFilter ? (
@@ -223,7 +352,7 @@ export default function ServiceManagementPage() {
                                 if (statusOrders.length === 0) return null;
 
                                 return (
-                                    <div key={status} className="flex-shrink-0 w-80">
+                                    <div key={status} className="flex-shrink-0 w-96">
                                         <div className="bg-white rounded-lg shadow-sm">
                                             {/* Column Header */}
                                             <div className={`p-4 border-b-4 rounded-t-lg ${getStatusColor(status)}`}>
@@ -237,48 +366,118 @@ export default function ServiceManagementPage() {
                                             <div className="p-3 space-y-3 max-h-[600px] overflow-y-auto">
                                                 {statusOrders.map(order => {
                                                     const slaStatus = getSLAStatus(order.estimated_completion, order.current_status);
+                                                    const isExpanded = expandedOrders.has(order.id);
 
                                                     return (
-                                                        <Link
+                                                        <div
                                                             key={order.id}
-                                                            href={`/admin/services/${order.id}`}
-                                                            className="block bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors border border-gray-200"
+                                                            className="bg-gray-50 rounded-lg border border-gray-200"
                                                         >
-                                                            {/* Order Number & Priority */}
-                                                            <div className="flex justify-between items-start mb-2">
-                                                                <span className="font-semibold text-gray-900 text-sm">
-                                                                    {order.order_number}
-                                                                </span>
-                                                                {order.priority === 'express' && (
-                                                                    <span className={`px-2 py-0.5 text-xs font-semibold rounded border ${getPriorityColor(order.priority)}`}>
-                                                                        EXPRESS
+                                                            {/* Order Header - Clickable */}
+                                                            <div
+                                                                onClick={() => toggleOrderExpansion(order.id)}
+                                                                className="p-4 cursor-pointer hover:bg-gray-100 transition-colors"
+                                                            >
+                                                                {/* Order Number & Priority */}
+                                                                <div className="flex justify-between items-start mb-2">
+                                                                    <span className="font-semibold text-gray-900 text-sm">
+                                                                        {order.order_number}
                                                                     </span>
+                                                                    <div className="flex gap-1">
+                                                                        {order.priority === 'express' && (
+                                                                            <span className={`px-2 py-0.5 text-xs font-semibold rounded border ${getPriorityColor(order.priority)}`}>
+                                                                                EXPRESS
+                                                                            </span>
+                                                                        )}
+                                                                        {order.is_priority && (
+                                                                            <span className="text-orange-600 text-lg">⚡</span>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Customer */}
+                                                                <div className="text-sm text-gray-700 mb-2">
+                                                                    <div className="font-medium">{order.customer_name}</div>
+                                                                    <div className="text-xs text-gray-500">{order.customer_phone}</div>
+                                                                </div>
+
+                                                                {/* Service */}
+                                                                <div className="text-xs text-gray-600 mb-3">
+                                                                    {order.service_name}
+                                                                </div>
+
+                                                                {/* SLA Status */}
+                                                                {slaStatus && (
+                                                                    <div className={`text-xs font-semibold px-2 py-1 rounded border ${slaStatus.color} inline-block mb-2`}>
+                                                                        {slaStatus.label}
+                                                                    </div>
                                                                 )}
+
+                                                                {/* Aging Indicator */}
+                                                                <div className="text-xs text-gray-500">
+                                                                    Age: {parseFloat(String(order.aging_hours || 0)).toFixed(1)}h | Stage: {parseFloat(String(order.stage_aging_hours || 0)).toFixed(1)}h
+                                                                </div>
+
+                                                                {/* Expand Indicator */}
+                                                                <div className="text-xs text-blue-600 mt-2">
+                                                                    {isExpanded ? '▼ Click to collapse' : '▶ Click to expand details'}
+                                                                </div>
                                                             </div>
 
-                                                            {/* Customer */}
-                                                            <div className="text-sm text-gray-700 mb-2">
-                                                                <div className="font-medium">{order.customer_name}</div>
-                                                                <div className="text-xs text-gray-500">{order.customer_phone}</div>
-                                                            </div>
+                                                            {/* Expanded Details */}
+                                                            {isExpanded && (
+                                                                <div className="border-t border-gray-200 p-4 space-y-4 bg-white">
+                                                                    {/* Order Aging Card */}
+                                                                    <OrderAgingCard
+                                                                        agingHours={parseFloat(String(order.aging_hours || 0))}
+                                                                        stageAgingHours={parseFloat(String(order.stage_aging_hours || 0))}
+                                                                        currentStage={formatStatus(order.current_status)}
+                                                                        createdAt={order.created_at}
+                                                                    />
 
-                                                            {/* Service */}
-                                                            <div className="text-xs text-gray-600 mb-3">
-                                                                {order.service_name}
-                                                            </div>
+                                                                    {/* Priority Marker */}
+                                                                    <PriorityMarker
+                                                                        orderId={order.id}
+                                                                        isPriority={order.is_priority}
+                                                                        priorityReason={order.priority_reason}
+                                                                        onUpdate={fetchOrders}
+                                                                    />
 
-                                                            {/* SLA Status */}
-                                                            {slaStatus && (
-                                                                <div className={`text-xs font-semibold px-2 py-1 rounded border ${slaStatus.color} inline-block`}>
-                                                                    {slaStatus.label}
+                                                                    {/* Action Buttons */}
+                                                                    <div className="flex gap-2">
+                                                                        <button
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                setSelectedOrderId(order.id);
+                                                                                setShowExceptionModal(true);
+                                                                            }}
+                                                                            className="flex-1 px-3 py-2 text-sm bg-red-50 text-red-700 border border-red-200 rounded hover:bg-red-100"
+                                                                        >
+                                                                            Report Exception
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                setSelectedOrderId(order.id);
+                                                                                setShowRewashModal(true);
+                                                                            }}
+                                                                            className="flex-1 px-3 py-2 text-sm bg-orange-50 text-orange-700 border border-orange-200 rounded hover:bg-orange-100"
+                                                                        >
+                                                                            Record Rewash
+                                                                        </button>
+                                                                    </div>
+
+                                                                    {/* View Full Details Link */}
+                                                                    <Link
+                                                                        href={`/admin/orders/${order.id}`}
+                                                                        className="block text-center text-sm text-blue-600 hover:text-blue-800 font-medium"
+                                                                        onClick={(e) => e.stopPropagation()}
+                                                                    >
+                                                                        View Full Details →
+                                                                    </Link>
                                                                 </div>
                                                             )}
-
-                                                            {/* Estimated Completion */}
-                                                            <div className="text-xs text-gray-500 mt-2">
-                                                                Due: {new Date(order.estimated_completion).toLocaleString('id-ID')}
-                                                            </div>
-                                                        </Link>
+                                                        </div>
                                                     );
                                                 })}
                                             </div>
@@ -314,6 +513,9 @@ export default function ServiceManagementPage() {
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                 Priority
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Aging
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                 Due Date
@@ -353,16 +555,24 @@ export default function ServiceManagementPage() {
                                                         )}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
-                                                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded border ${getPriorityColor(order.priority)}`}>
-                                                            {order.priority.toUpperCase()}
-                                                        </span>
+                                                        <div className="flex items-center gap-1">
+                                                            <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded border ${getPriorityColor(order.priority)}`}>
+                                                                {order.priority.toUpperCase()}
+                                                            </span>
+                                                            {order.is_priority && (
+                                                                <span className="text-orange-600 text-lg">⚡</span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {parseFloat(String(order.aging_hours || 0)).toFixed(1)}h
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                         {new Date(order.estimated_completion).toLocaleString('id-ID')}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                                                         <Link
-                                                            href={`/admin/services/${order.id}`}
+                                                            href={`/admin/orders/${order.id}`}
                                                             className="text-green-600 hover:text-green-900 font-medium"
                                                         >
                                                             View Details →
@@ -378,6 +588,46 @@ export default function ServiceManagementPage() {
                     </div>
                 )}
             </div>
+
+            {/* Modals */}
+            {selectedOrderId && (
+                <>
+                    <ExceptionReportModal
+                        orderId={selectedOrderId}
+                        isOpen={showExceptionModal}
+                        onClose={() => {
+                            setShowExceptionModal(false);
+                            setSelectedOrderId(null);
+                        }}
+                        onSuccess={() => {
+                            fetchOrders();
+                            setShowExceptionModal(false);
+                            setSelectedOrderId(null);
+                        }}
+                    />
+                    <RewashModal
+                        orderId={selectedOrderId}
+                        isOpen={showRewashModal}
+                        onClose={() => {
+                            setShowRewashModal(false);
+                            setSelectedOrderId(null);
+                        }}
+                        onSuccess={() => {
+                            fetchOrders();
+                            setShowRewashModal(false);
+                            setSelectedOrderId(null);
+                        }}
+                    />
+                </>
+            )}
+            <BatchCreateModal
+                isOpen={showBatchModal}
+                onClose={() => setShowBatchModal(false)}
+                onSuccess={() => {
+                    fetchBatches();
+                    setShowBatchModal(false);
+                }}
+            />
         </div>
     );
 }

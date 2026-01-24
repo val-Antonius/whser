@@ -47,10 +47,13 @@ export default function POSPage() {
     const [paymentDetails, setPaymentDetails] = useState({
         paymentStatus: PaymentStatus.UNPAID,
         paidAmount: '',
+        depositAmount: '',
         paymentMethod: PaymentMethod.CASH,
+        referenceNumber: '',
     });
 
     const [estimatedPrice, setEstimatedPrice] = useState(0);
+    const [minimumChargeApplied, setMinimumChargeApplied] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -146,20 +149,26 @@ export default function POSPage() {
         if (!selectedService) return;
 
         let price = 0;
+        let basePrice = 0;
         if (orderDetails.unitType === UnitType.KG && orderDetails.estimatedWeight) {
             const weight = parseFloat(orderDetails.estimatedWeight);
-            price = weight * selectedService.base_price;
+            basePrice = weight * selectedService.base_price;
+            price = basePrice;
         } else if (orderDetails.unitType === UnitType.PIECE && orderDetails.quantity) {
             const qty = parseInt(orderDetails.quantity);
-            price = qty * selectedService.base_price;
+            basePrice = qty * selectedService.base_price;
+            price = basePrice;
         }
 
         // Apply minimum charge
+        let minChargeApplied = false;
         if (selectedService.minimum_charge && price < selectedService.minimum_charge) {
             price = selectedService.minimum_charge;
+            minChargeApplied = true;
         }
 
         setEstimatedPrice(price);
+        setMinimumChargeApplied(minChargeApplied);
     };
 
     const createOrder = async () => {
@@ -232,7 +241,9 @@ export default function POSPage() {
         setPaymentDetails({
             paymentStatus: PaymentStatus.UNPAID,
             paidAmount: '',
+            depositAmount: '',
             paymentMethod: PaymentMethod.CASH,
+            referenceNumber: '',
         });
         setEstimatedPrice(0);
         setError('');

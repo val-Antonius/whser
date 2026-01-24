@@ -140,3 +140,6 @@ export function getInsertId(result: any): number {
 export function getAffectedRows(result: any): number {
   return result.affectedRows;
 }
+
+// Default export for backward compatibility
+export default getPool();
