@@ -88,10 +88,6 @@ export default function CustomersPage() {
             <PageHeader
                 title="Manajemen Pelanggan"
                 description="Lihat dan kelola profil pelanggan"
-                breadcrumbs={[
-                    { label: 'Dashboard', href: '/admin/dashboard/operations' },
-                    { label: 'Pelanggan' }
-                ]}
                 actions={
                     <Link href="/admin/pos">
                         <Button className="bg-purple-600 hover:bg-purple-700">

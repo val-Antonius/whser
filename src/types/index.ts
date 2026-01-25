@@ -271,8 +271,7 @@ export interface InventoryItem {
 export enum TransactionType {
     STOCK_IN = 'stock_in',
     STOCK_OUT = 'stock_out',
-    ADJUSTMENT_IN = 'adjustment_in',
-    ADJUSTMENT_OUT = 'adjustment_out',
+    ADJUSTMENT = 'adjustment',
     CONSUMPTION = 'consumption',
     WASTE = 'waste',
     LOSS = 'loss',

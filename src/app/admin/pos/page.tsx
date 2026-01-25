@@ -85,7 +85,7 @@ export default function POSPage() {
         if (selectedService) {
             calculatePrice();
         }
-    }, [selectedService, orderDetails.estimatedWeight, orderDetails.quantity, orderDetails.unitType]);
+    }, [selectedService, orderDetails.estimatedWeight, orderDetails.quantity, orderDetails.unitType, orderDetails.priority]);
 
     const fetchServices = async () => {
         try {
@@ -169,6 +169,13 @@ export default function POSPage() {
             price = basePrice;
         }
 
+        // Apply Express Markup (50%)
+        let expressSurcharge = 0;
+        if (orderDetails.priority === OrderPriority.EXPRESS) {
+            expressSurcharge = price * 0.5;
+            price += expressSurcharge;
+        }
+
         // Apply minimum charge
         let minChargeApplied = false;
         if (selectedService.minimum_charge && price < selectedService.minimum_charge) {
@@ -178,6 +185,23 @@ export default function POSPage() {
 
         setEstimatedPrice(price);
         setMinimumChargeApplied(minChargeApplied);
+    };
+
+    // Calculate Estimated Completion
+    const getEstimatedCompletion = () => {
+        if (!selectedService) return null;
+
+        const hours = orderDetails.priority === OrderPriority.EXPRESS
+            ? (selectedService.express_hours || selectedService.estimated_hours)
+            : selectedService.estimated_hours;
+
+        const date = new Date();
+        date.setHours(date.getHours() + hours);
+
+        return {
+            date,
+            hours
+        };
     };
 
     const createOrder = async () => {
@@ -263,10 +287,6 @@ export default function POSPage() {
             <PageHeader
                 title="Kasir Point of Sale"
                 description="Buat pesanan baru dan proses transaksi"
-                breadcrumbs={[
-                    { label: 'Dashboard', href: '/admin/dashboard/operations' },
-                    { label: 'Kasir (POS)' }
-                ]}
             />
 
             <div className="max-w-6xl mx-auto">
@@ -540,15 +560,43 @@ export default function POSPage() {
                                             />
                                         </div>
 
-                                        <div className="bg-muted p-4 rounded-lg flex justify-between items-center">
-                                            <span className="font-medium">Estimasi Harga</span>
-                                            <div className="text-right">
-                                                <div className="text-2xl font-bold text-primary">
-                                                    Rp {estimatedPrice.toLocaleString('id-ID')}
+                                        <div className="bg-muted p-4 rounded-lg space-y-3">
+                                            {/* SLA Display */}
+                                            {selectedService && (
+                                                <div className="flex justify-between items-center text-sm border-b border-gray-200 pb-2 mb-2">
+                                                    <span className="text-muted-foreground">Estimasi Selesai</span>
+                                                    <span className="font-medium">
+                                                        {getEstimatedCompletion()?.date.toLocaleString('id-ID', {
+                                                            weekday: 'short',
+                                                            day: 'numeric',
+                                                            month: 'short',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit'
+                                                        })}
+                                                        <span className="text-xs text-muted-foreground ml-1">
+                                                            ({getEstimatedCompletion()?.hours} Jam)
+                                                        </span>
+                                                    </span>
                                                 </div>
-                                                {minimumChargeApplied && (
-                                                    <div className="text-xs text-muted-foreground">* Minimum charge applied</div>
-                                                )}
+                                            )}
+
+                                            <div className="flex justify-between items-center">
+                                                <span className="font-medium">Estimasi Harga</span>
+                                                <div className="text-right">
+                                                    <div className="text-2xl font-bold text-primary">
+                                                        Rp {estimatedPrice.toLocaleString('id-ID')}
+                                                    </div>
+
+                                                    {/* Price Details */}
+                                                    <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
+                                                        {orderDetails.priority === OrderPriority.EXPRESS && (
+                                                            <div className="text-orange-600 font-medium">+ Biaya Express (50%)</div>
+                                                        )}
+                                                        {minimumChargeApplied && (
+                                                            <div>* Minimum charge applied</div>
+                                                        )}
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </>

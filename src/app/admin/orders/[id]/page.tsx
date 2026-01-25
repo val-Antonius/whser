@@ -7,6 +7,10 @@ import CancelOrderModal from '@/components/CancelOrderModal';
 import VoidOrderModal from '@/components/VoidOrderModal';
 import RecordPaymentModal from '@/components/RecordPaymentModal';
 import CostAttributionCard from '@/components/inventory/CostAttributionCard';
+import { ExceptionDialog } from '@/components/orders/ExceptionDialog';
+import { ExceptionCard } from '@/components/orders/ExceptionCard';
+import { OrderStatus } from '@/types';
+import RewashModal from '@/components/service/RewashModal';
 
 interface PaymentTransaction {
     id: number;
@@ -25,17 +29,21 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     const [order, setOrder] = useState<any>(null);
     const [payments, setPayments] = useState<PaymentTransaction[]>([]);
     const [statusHistory, setStatusHistory] = useState<any[]>([]);
+    const [exceptions, setExceptions] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     // Modal states
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [showVoidModal, setShowVoidModal] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [showExceptionDialog, setShowExceptionDialog] = useState(false);
+    const [showRewashModal, setShowRewashModal] = useState(false);
 
     useEffect(() => {
         fetchOrderDetails();
         fetchPayments();
         fetchStatusHistory();
+        fetchExceptions();
     }, [id]);
 
     const fetchOrderDetails = async () => {
@@ -76,10 +84,95 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
         }
     };
 
+    const fetchExceptions = async () => {
+        try {
+            const response = await fetch(`/api/orders/${id}/exceptions`);
+            const data = await response.json();
+            if (data.exceptions) {
+                setExceptions(data.exceptions);
+            }
+        } catch (error) {
+            console.error('Error fetching exceptions:', error);
+        }
+    };
+
     const handleActionSuccess = () => {
         fetchOrderDetails();
         fetchPayments();
         fetchStatusHistory();
+        fetchExceptions();
+    };
+
+    const handleCreateException = async (data: any) => {
+        try {
+            const response = await fetch(`/api/orders/${id}/exceptions`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...data, reported_by: 1 }) // TODO: Get from session
+            });
+
+            if (response.ok) {
+                await fetchExceptions();
+                alert('Exception created successfully');
+            } else {
+                throw new Error('Failed to create exception');
+            }
+        } catch (error) {
+            console.error('Error creating exception:', error);
+            throw error;
+        }
+    };
+
+    const handleUpdateStatus = async (newStatus: string) => {
+        try {
+            const response = await fetch(`/api/orders/${id}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    new_status: newStatus,
+                    changed_by: 1, // TODO: Get from session
+                    actual_completion: newStatus === 'completed' ? new Date().toISOString() : undefined
+                })
+            });
+
+            if (response.ok) {
+                await handleActionSuccess();
+                alert('Status updated successfully');
+            } else {
+                const data = await response.json();
+                alert(data.error || 'Failed to update status');
+            }
+        } catch (error) {
+            console.error('Error updating status:', error);
+            alert('Failed to update status');
+        }
+    };
+
+    const getNextStatusButton = () => {
+        const status = order.current_status;
+        const statusButtons: Record<string, { label: string; nextStatus: string; color: string }> = {
+            'received': { label: 'Start Processing', nextStatus: 'waiting_for_process', color: 'bg-blue-600 hover:bg-blue-700' },
+            'waiting_for_process': { label: 'Start Wash', nextStatus: 'in_wash', color: 'bg-purple-600 hover:bg-purple-700' },
+            'in_wash': { label: 'Move to Dry', nextStatus: 'in_dry', color: 'bg-purple-600 hover:bg-purple-700' },
+            'in_dry': { label: 'Move to Iron', nextStatus: 'in_iron', color: 'bg-indigo-600 hover:bg-indigo-700' },
+            'in_iron': { label: 'Move to Fold', nextStatus: 'in_fold', color: 'bg-indigo-600 hover:bg-indigo-700' },
+            'in_fold': { label: 'Ready for QC', nextStatus: 'ready_for_qc', color: 'bg-orange-600 hover:bg-orange-700' },
+            'ready_for_qc': { label: 'Mark as Completed', nextStatus: 'completed', color: 'bg-green-600 hover:bg-green-700' },
+            'completed': { label: 'Ready for Pickup', nextStatus: 'ready_for_pickup', color: 'bg-green-600 hover:bg-green-700' },
+            'ready_for_pickup': { label: 'Mark as Picked Up', nextStatus: 'closed', color: 'bg-gray-600 hover:bg-gray-700' },
+        };
+
+        const button = statusButtons[status];
+        if (!button) return null;
+
+        return (
+            <button
+                onClick={() => handleUpdateStatus(button.nextStatus)}
+                className={`px-4 py-2 text-white rounded-lg transition-colors ${button.color}`}
+            >
+                {button.label}
+            </button>
+        );
     };
 
     const formatStatus = (status: string) => {
@@ -144,6 +237,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     const canCancel = order.current_status !== 'closed' && order.current_status !== 'cancelled' && !order.is_voided;
     const canVoid = order.current_status !== 'closed' && !order.is_voided;
     const canRecordPayment = !order.is_voided && order.balance_due > 0;
+    const canRewash = order && ['ready_for_qc', 'completed'].includes(order.current_status);
 
     return (
         <div className="min-h-screen bg-gray-50 p-6">
@@ -152,20 +246,29 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                 <div className="mb-6 flex justify-between items-start">
                     <div>
                         <Link href="/admin/orders" className="text-blue-600 hover:text-blue-800 text-sm mb-2 inline-block">
-                            ← Back to Orders
+                            ← Kembali ke Pesanan
                         </Link>
-                        <h1 className="text-3xl font-bold text-gray-900">Order Details</h1>
+                        <h1 className="text-3xl font-bold text-gray-900">Detail Pesanan</h1>
                         <p className="text-gray-600 mt-1">{order.order_number}</p>
                     </div>
 
                     {/* Action Buttons */}
                     <div className="flex gap-2">
+                        {getNextStatusButton()}
                         {canRecordPayment && (
                             <button
                                 onClick={() => setShowPaymentModal(true)}
                                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                             >
-                                Record Payment
+                                Catat Pembayaran
+                            </button>
+                        )}
+                        {canRewash && (
+                            <button
+                                onClick={() => setShowRewashModal(true)}
+                                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                            >
+                                Catat Rewash
                             </button>
                         )}
                         {canCancel && (
@@ -173,7 +276,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                                 onClick={() => setShowCancelModal(true)}
                                 className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
                             >
-                                Cancel Order
+                                Batalkan (Cancel)
                             </button>
                         )}
                         {canVoid && (
@@ -181,7 +284,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                                 onClick={() => setShowVoidModal(true)}
                                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                             >
-                                Void Transaction
+                                Void Transaksi
                             </button>
                         )}
                     </div>
@@ -259,6 +362,30 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                                 <div className="mt-4 pt-4 border-t">
                                     <p className="text-sm text-blue-600">ℹ️ Minimum charge applied for this order</p>
                                 </div>
+                            )}
+                        </div>
+
+                        {/* Exceptions */}
+                        <div className="bg-white rounded-lg shadow-sm p-6">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-lg font-semibold text-gray-900">Exceptions</h2>
+                                {order && ![OrderStatus.RECEIVED, OrderStatus.CLOSED, OrderStatus.CANCELLED].includes(order.current_status as OrderStatus) && (
+                                    <button
+                                        onClick={() => setShowExceptionDialog(true)}
+                                        className="px-3 py-1 bg-orange-600 text-white text-sm rounded hover:bg-orange-700 transition-colors"
+                                    >
+                                        Add Exception
+                                    </button>
+                                )}
+                            </div>
+                            {exceptions.length > 0 ? (
+                                <div className="space-y-3">
+                                    {exceptions.map((exception) => (
+                                        <ExceptionCard key={exception.id} exception={exception} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-gray-500 text-sm">No exceptions reported</p>
                             )}
                         </div>
 
@@ -416,6 +543,22 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                     handleActionSuccess();
                     alert('Payment recorded successfully');
                 }}
+            />
+
+            <RewashModal
+                orderId={parseInt(id)}
+                isOpen={showRewashModal}
+                onClose={() => setShowRewashModal(false)}
+                onSuccess={() => {
+                    handleActionSuccess();
+                    alert('Rewash recorded successfully');
+                }}
+            />
+
+            <ExceptionDialog
+                open={showExceptionDialog}
+                onOpenChange={setShowExceptionDialog}
+                onSubmit={handleCreateException}
             />
         </div>
     );

@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import WasteReportModal from '@/components/inventory/WasteReportModal';
 import WasteList from '@/components/inventory/WasteList';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { HelpCircle } from 'lucide-react';
 
 export default function WasteTrackingPage() {
     const [wasteEvents, setWasteEvents] = useState([]);
@@ -37,29 +39,59 @@ export default function WasteTrackingPage() {
         <div className="p-6">
             {/* Header */}
             <div className="mb-6">
-                <h1 className="text-3xl font-bold mb-2">Waste Tracking</h1>
+                <h1 className="text-3xl font-bold mb-2">Pelacakan Limbah & Kehilangan</h1>
                 <p className="text-gray-600">
-                    Record and monitor inventory waste and loss events
+                    Pencatatan barang rusak, tumpah, atau hilang untuk akurasi stok dan biaya.
                 </p>
             </div>
 
+            {/* Educational Info Card */}
+            <Card className="mb-6 bg-red-50 border-red-200">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-red-900">
+                        <HelpCircle className="h-5 w-5 text-red-600" />
+                        Apa fungsi halaman ini?
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                    <div>
+                        <strong className="text-sm text-gray-900">1. Mencatat "Loss" (Kehilangan)</strong>
+                        <p className="text-sm text-gray-700">
+                            Berbeda dengan pemakaian cuci (Consumption), data ini adalah inventaris yang terbuang tanpa menghasilkan pendapatan (Tumpah, Rusak, Dicuri).
+                        </p>
+                    </div>
+                    <div>
+                        <strong className="text-sm text-gray-900">2. Menjaga Akurasi Stok</strong>
+                        <p className="text-sm text-gray-700">
+                            Jika barang tumpah tapi tidak dicatat, stok sistem akan lebih tinggi dari fisik, menyebabkan selisih saat Opname.
+                        </p>
+                    </div>
+                    <div>
+                        <strong className="text-sm text-gray-900">3. Menghitung Kerugian Finansial</strong>
+                        <p className="text-sm text-gray-700">
+                            Setiap gram deterjen yang tumpah ada harganya. Sistem otomatis menghitung nilai rupiah dari kehilangan tersebut.
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
+
             {/* Summary Card */}
-            <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+            <div className="bg-white border rounded-lg p-6 mb-6 shadow-sm">
                 <div className="flex justify-between items-center">
                     <div>
-                        <div className="text-sm text-red-700">Total Cost Impact</div>
-                        <div className="text-3xl font-bold text-red-800">
-                            ₱{totalCostImpact.toFixed(2)}
+                        <div className="text-sm text-gray-500 font-medium">Total Nilai Kehilangan</div>
+                        <div className="text-3xl font-bold text-red-600">
+                            Rp {totalCostImpact.toLocaleString('id-ID')}
                         </div>
-                        <div className="text-sm text-red-600 mt-1">
-                            {wasteEvents.length} waste event{wasteEvents.length !== 1 ? 's' : ''} recorded
+                        <div className="text-sm text-gray-500 mt-1">
+                            Dari {wasteEvents.length} laporan kejadian
                         </div>
                     </div>
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors shadow-sm"
                     >
-                        Report Waste
+                        + Laporkan Kehilangan
                     </button>
                 </div>
             </div>
@@ -74,7 +106,7 @@ export default function WasteTrackingPage() {
             {/* Loading State */}
             {loading && (
                 <div className="text-center py-12 text-gray-500">
-                    Loading waste events...
+                    Memuat data...
                 </div>
             )}
 

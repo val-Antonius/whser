@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import BundleCreateModal from '@/components/inventory/BundleCreateModal';
 import BundleList from '@/components/inventory/BundleList';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { HelpCircle } from 'lucide-react';
 
 export default function BundleManagementPage() {
     const [bundles, setBundles] = useState([]);
@@ -55,22 +57,72 @@ export default function BundleManagementPage() {
         <div className="p-6">
             {/* Header */}
             <div className="mb-6">
-                <h1 className="text-3xl font-bold mb-2">Inventory Bundles</h1>
+                <h1 className="text-3xl font-bold mb-2">Paket Barang (Bundles)</h1>
                 <p className="text-gray-600">
-                    Group inventory items into bundles for bulk operations
+                    Kelompokkan barang inventory menjadi paket untuk operasi massal
                 </p>
             </div>
+
+            {/* DEPRECATION WARNING */}
+            <div className="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                <div className="flex">
+                    <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                    </div>
+                    <div className="ml-3">
+                        <p className="text-sm text-yellow-700">
+                            <strong>Fitur ini sudah tidak digunakan (Deprecated).</strong>
+                            <br />
+                            Silakan gunakan fitur <a href="/admin/inventory/consumption" className="underline font-bold text-yellow-800">Consumption Templates (Resep Layanan)</a> yang lebih otomatis dan terintegrasi dengan Order Processing.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Educational Info Card */}
+            <Card className="mb-6 bg-blue-50 border-blue-200">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-blue-900">
+                        <HelpCircle className="h-5 w-5 text-blue-600" />
+                        Apa itu Inventory Bundles?
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                    <div>
+                        <strong className="text-sm text-gray-900">Fungsi:</strong>
+                        <p className="text-sm text-gray-700">Mengelompokkan beberapa barang inventory menjadi satu paket.</p>
+                    </div>
+                    <div>
+                        <strong className="text-sm text-gray-900">Contoh:</strong>
+                        <p className="text-sm text-gray-700">Bundle "Cuci Kering 1kg" = 50ml deterjen + 30ml softener + 1 plastik kemasan.</p>
+                    </div>
+                    <div>
+                        <strong className="text-sm text-gray-900">Manfaat:</strong>
+                        <p className="text-sm text-gray-700">Mengurangi stok otomatis saat processing order menggunakan bundle ini.</p>
+                    </div>
+                    <div>
+                        <strong className="text-sm text-gray-900">Flow Real:</strong>
+                        <ol className="text-sm text-gray-700 list-decimal list-inside space-y-1">
+                            <li>Buat bundle untuk layanan tertentu</li>
+                            <li>Saat order diproses, pilih bundle</li>
+                            <li>Sistem auto-deduct semua item dalam bundle dari inventory</li>
+                        </ol>
+                    </div>
+                </CardContent>
+            </Card>
 
             {/* Action Bar */}
             <div className="mb-6 flex justify-between items-center">
                 <div className="text-sm text-gray-600">
-                    {bundles.length} bundle{bundles.length !== 1 ? 's' : ''} created
+                    {bundles.length} bundle dibuat
                 </div>
                 <button
                     onClick={() => setIsModalOpen(true)}
                     className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                 >
-                    + Create Bundle
+                    + Buat Bundle
                 </button>
             </div>
 

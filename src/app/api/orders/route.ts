@@ -123,15 +123,18 @@ export async function POST(request: NextRequest) {
         let estimatedPrice = 0;
         if (unit_type === UnitType.KG && estimated_weight) {
             estimatedPrice = estimated_weight * service.base_price;
-            // Apply minimum charge if applicable
-            if (service.minimum_charge && estimatedPrice < service.minimum_charge) {
-                estimatedPrice = service.minimum_charge;
-            }
         } else if (unit_type === UnitType.PIECE && quantity) {
             estimatedPrice = quantity * service.base_price;
-            if (service.minimum_charge && estimatedPrice < service.minimum_charge) {
-                estimatedPrice = service.minimum_charge;
-            }
+        }
+
+        // Apply Express Markup (50%)
+        if (priority === OrderPriority.EXPRESS) {
+            estimatedPrice = estimatedPrice * 1.5;
+        }
+
+        // Apply minimum charge if applicable
+        if (service.minimum_charge && estimatedPrice < service.minimum_charge) {
+            estimatedPrice = service.minimum_charge;
         }
 
         // Generate order number
@@ -152,8 +155,9 @@ export async function POST(request: NextRequest) {
         }
 
         // Calculate estimated completion time
+        // Use express_hours if priority is EXPRESS, otherwise use standard estimated_hours
         const estimatedHours = priority === OrderPriority.EXPRESS
-            ? (service.express_hours || service.estimated_hours)
+            ? (service.express_hours || service.estimated_hours) // Fallback to standard if express_hours not set
             : service.estimated_hours;
 
         const estimatedCompletion = new Date();
@@ -196,6 +200,21 @@ export async function POST(request: NextRequest) {
          VALUES (?, NULL, ?, ?, ?)`,
                 [orderId, OrderStatus.RECEIVED, created_by, 'Order created']
             );
+
+            // Record initial payment transaction if applicable
+            if (paid_amount && parseFloat(paid_amount) > 0) {
+                await conn.execute(
+                    `INSERT INTO payment_transactions 
+                    (order_id, transaction_type, amount, payment_method, notes, created_by)
+                    VALUES (?, 'payment', ?, ?, 'Initial payment at order creation', ?)`,
+                    [
+                        orderId,
+                        paid_amount,
+                        payment_method || 'cash',
+                        created_by
+                    ]
+                );
+            }
 
             return orderId;
         });

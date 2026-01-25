@@ -67,14 +67,14 @@ export default function WasteReportModal({ isOpen, onClose, onSuccess }: WasteRe
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-md">
-                <h2 className="text-xl font-bold mb-4 text-red-700">Report Inventory Waste/Loss</h2>
+                <h2 className="text-xl font-bold mb-4 text-red-700">Laporkan Kehilangan/Limbah</h2>
 
                 <form onSubmit={handleSubmit}>
                     <div className="space-y-4">
                         {/* Inventory Item */}
                         <div>
                             <label className="block text-sm font-medium mb-1">
-                                Inventory Item <span className="text-red-500">*</span>
+                                Nama Barang <span className="text-red-500">*</span>
                             </label>
                             <select
                                 value={inventoryItemId}
@@ -82,7 +82,7 @@ export default function WasteReportModal({ isOpen, onClose, onSuccess }: WasteRe
                                 className="w-full border rounded px-3 py-2"
                                 required
                             >
-                                <option value="">Select item...</option>
+                                <option value="">Pilih barang...</option>
                                 {/* TODO: Populate from API */}
                                 <option value="1">Detergent</option>
                                 <option value="2">Fabric Softener</option>
@@ -93,7 +93,7 @@ export default function WasteReportModal({ isOpen, onClose, onSuccess }: WasteRe
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <label className="block text-sm font-medium mb-1">
-                                    Quantity <span className="text-red-500">*</span>
+                                    Jumlah <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                     type="number"
@@ -105,7 +105,7 @@ export default function WasteReportModal({ isOpen, onClose, onSuccess }: WasteRe
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium mb-1">Unit</label>
+                                <label className="block text-sm font-medium mb-1">Satuan</label>
                                 <select
                                     value={unit}
                                     onChange={(e) => setUnit(e.target.value)}
@@ -115,7 +115,7 @@ export default function WasteReportModal({ isOpen, onClose, onSuccess }: WasteRe
                                     <option value="g">g</option>
                                     <option value="kg">kg</option>
                                     <option value="l">l</option>
-                                    <option value="pieces">pieces</option>
+                                    <option value="pieces">buah</option>
                                 </select>
                             </div>
                         </div>
@@ -123,7 +123,7 @@ export default function WasteReportModal({ isOpen, onClose, onSuccess }: WasteRe
                         {/* Waste Type */}
                         <div>
                             <label className="block text-sm font-medium mb-1">
-                                Waste Type <span className="text-red-500">*</span>
+                                Jenis Kehilangan <span className="text-red-500">*</span>
                             </label>
                             <select
                                 value={wasteType}
@@ -131,26 +131,26 @@ export default function WasteReportModal({ isOpen, onClose, onSuccess }: WasteRe
                                 className="w-full border rounded px-3 py-2"
                                 required
                             >
-                                <option value="spillage">Spillage</option>
-                                <option value="expiration">Expiration</option>
-                                <option value="damage">Damage</option>
-                                <option value="theft">Theft</option>
-                                <option value="contamination">Contamination</option>
-                                <option value="other">Other</option>
+                                <option value="spillage">Tumpah (Spillage)</option>
+                                <option value="expiration">Kadaluarsa</option>
+                                <option value="damage">Rusak</option>
+                                <option value="theft">Hilang/Dicuri</option>
+                                <option value="contamination">Terkontaminasi</option>
+                                <option value="other">Lainnya</option>
                             </select>
                         </div>
 
                         {/* Reason */}
                         <div>
                             <label className="block text-sm font-medium mb-1">
-                                Reason <span className="text-red-500">*</span>
+                                Alasan <span className="text-red-500">*</span>
                             </label>
                             <textarea
                                 value={reason}
                                 onChange={(e) => setReason(e.target.value)}
                                 className="w-full border rounded px-3 py-2"
                                 rows={3}
-                                placeholder="Detailed explanation required..."
+                                placeholder="Jelaskan penyebab kehilangan..."
                                 required
                             />
                         </div>
@@ -158,18 +158,18 @@ export default function WasteReportModal({ isOpen, onClose, onSuccess }: WasteRe
                         {/* Authorization Code */}
                         <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
                             <label className="block text-sm font-medium mb-1">
-                                Manager Authorization Code <span className="text-red-500">*</span>
+                                Kode Otorisasi Manager <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="password"
                                 value={authCode}
                                 onChange={(e) => setAuthCode(e.target.value)}
                                 className="w-full border rounded px-3 py-2"
-                                placeholder="Enter manager PIN"
+                                placeholder="Masukkan PIN manager"
                                 required
                             />
                             <p className="text-xs text-yellow-700 mt-1">
-                                Manager authorization required for waste reporting
+                                Diperlukan persetujuan manager untuk mencatat kehilangan.
                             </p>
                         </div>
 
@@ -188,14 +188,14 @@ export default function WasteReportModal({ isOpen, onClose, onSuccess }: WasteRe
                                 className="flex-1 px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
                                 disabled={loading}
                             >
-                                Cancel
+                                Batal
                             </button>
                             <button
                                 type="submit"
                                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
                                 disabled={loading}
                             >
-                                {loading ? 'Reporting...' : 'Report Waste'}
+                                {loading ? 'Menyimpan...' : 'Simpan Laporan'}
                             </button>
                         </div>
                     </div>

@@ -1,13 +1,19 @@
+// ============================================================================
+// OPERATIONAL METRICS CONTENT COMPONENT
+// ============================================================================
+// Purpose: EXACT COPY of operational metrics from /admin/dashboard/operations
+// DO NOT MODIFY - Keep identical to original
+// ============================================================================
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import MetricCard from '@/components/dashboard/MetricCard';
 import CapacityGauge from '@/components/dashboard/CapacityGauge';
 import ContributionMarginTable from '@/components/dashboard/ContributionMarginTable';
-import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 
-export default function OperationalDashboard() {
+export function OperationalMetricsContent() {
     const [dateRange, setDateRange] = useState({
         start_date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         end_date: new Date().toISOString().split('T')[0]
@@ -59,16 +65,12 @@ export default function OperationalDashboard() {
 
     if (isLoading) {
         return (
-            <div className="p-6">
-                <div className="max-w-7xl mx-auto">
-                    <div className="animate-pulse space-y-4">
-                        <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-                        <div className="grid grid-cols-3 gap-4">
-                            {[1, 2, 3, 4, 5, 6].map(i => (
-                                <div key={i} className="h-32 bg-gray-200 rounded"></div>
-                            ))}
-                        </div>
-                    </div>
+            <div className="animate-pulse space-y-4">
+                <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+                <div className="grid grid-cols-3 gap-4">
+                    {[1, 2, 3, 4, 5, 6].map(i => (
+                        <div key={i} className="h-32 bg-gray-200 rounded"></div>
+                    ))}
                 </div>
             </div>
         );
@@ -76,37 +78,29 @@ export default function OperationalDashboard() {
 
     return (
         <div>
-            <PageHeader
-                title="Dashboard Operasional"
-                description="Metrik kinerja waktu nyata dan KPI"
-                breadcrumbs={[
-                    { label: 'Dashboard', href: '/admin/dashboard/operations' },
-                ]}
-                actions={
-                    <div className="flex gap-3 items-center">
-                        <label className="text-sm font-medium text-gray-700">Periode:</label>
-                        <input
-                            type="date"
-                            value={dateRange.start_date}
-                            onChange={(e) => setDateRange({ ...dateRange, start_date: e.target.value })}
-                            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                        />
-                        <span className="text-gray-500">s/d</span>
-                        <input
-                            type="date"
-                            value={dateRange.end_date}
-                            onChange={(e) => setDateRange({ ...dateRange, end_date: e.target.value })}
-                            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                        />
-                        <Button
-                            onClick={fetchAllMetrics}
-                            size="sm"
-                        >
-                            Refresh
-                        </Button>
-                    </div>
-                }
-            />
+            {/* Date Range Selector */}
+            <div className="flex gap-3 items-center mb-6 justify-end">
+                <label className="text-sm font-medium text-gray-700">Periode:</label>
+                <input
+                    type="date"
+                    value={dateRange.start_date}
+                    onChange={(e) => setDateRange({ ...dateRange, start_date: e.target.value })}
+                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                />
+                <span className="text-gray-500">s/d</span>
+                <input
+                    type="date"
+                    value={dateRange.end_date}
+                    onChange={(e) => setDateRange({ ...dateRange, end_date: e.target.value })}
+                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                />
+                <Button
+                    onClick={fetchAllMetrics}
+                    size="sm"
+                >
+                    Refresh
+                </Button>
+            </div>
 
             {/* Key Metrics Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">

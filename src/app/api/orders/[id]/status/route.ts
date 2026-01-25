@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, transaction } from '@/lib/db';
 import { OrderStatus, ApiResponse } from '@/types';
+import { InventoryService } from '@/lib/services/inventory-service';
 
 /**
  * PATCH /api/orders/[id]/status
@@ -14,10 +15,12 @@ import { OrderStatus, ApiResponse } from '@/types';
  */
 export async function PATCH(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const orderId = parseInt(params.id);
+        // Await params (Next.js 15 requirement)
+        const { id } = await params;
+        const orderId = parseInt(id);
         const body = await request.json();
         const { new_status, notes, changed_by } = body;
 
@@ -85,14 +88,6 @@ export async function PATCH(
                     [orderId]
                 );
             }
-
-            // Update pickup time if picked up
-            if (new_status === OrderStatus.CLOSED && !currentOrder.pickup_time) {
-                await conn.execute(
-                    'UPDATE orders SET pickup_time = CURRENT_TIMESTAMP WHERE id = ?',
-                    [orderId]
-                );
-            }
         });
 
         // Fetch updated order
@@ -107,6 +102,14 @@ export async function PATCH(
        WHERE o.id = ?`,
             [orderId]
         );
+
+        // TRIGGER: Auto-Consumption if status changed to IN_WASH
+        if (new_status === OrderStatus.IN_WASH) {
+            // Run asynchronously to not block response
+            InventoryService.processAutomaticConsumption(orderId, changed_by).catch(err => {
+                console.error('Background auto-consumption failed:', err);
+            });
+        }
 
         return NextResponse.json<ApiResponse<any>>({
             success: true,
@@ -134,6 +137,7 @@ function getValidTransitions(currentStatus: string): string[] {
         [OrderStatus.RECEIVED]: [
             OrderStatus.WAITING_FOR_PROCESS,
             OrderStatus.CANCELLED,
+            OrderStatus.IN_WASH, // Allow skipping waiting
         ],
         [OrderStatus.WAITING_FOR_PROCESS]: [
             OrderStatus.IN_WASH,
@@ -142,6 +146,8 @@ function getValidTransitions(currentStatus: string): string[] {
         [OrderStatus.IN_WASH]: [
             OrderStatus.IN_DRY,
             OrderStatus.CANCELLED,
+            OrderStatus.READY_FOR_QC, // Should allow skip to QA for flexibility
+            OrderStatus.IN_IRON, // Skip Dry
         ],
         [OrderStatus.IN_DRY]: [
             OrderStatus.IN_IRON,

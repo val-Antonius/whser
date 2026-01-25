@@ -10,10 +10,15 @@ export async function GET(request: NextRequest) {
 
         let query = `
             SELECT 
-                sct.*,
+                sct.id,
+                sct.service_id,
+                sct.inventory_item_id,
+                sct.estimated_quantity, 
+                sct.unit,              
                 s.service_name,
                 ii.item_name,
-                ii.item_code
+                ii.item_code,
+                ii.unit_of_measure as item_unit
             FROM service_consumption_templates sct
             JOIN services s ON sct.service_id = s.id
             JOIN inventory_items ii ON sct.inventory_item_id = ii.id
@@ -40,49 +45,77 @@ export async function GET(request: NextRequest) {
     }
 }
 
-// POST /api/inventory/consumption-templates - Create consumption template
+// POST /api/inventory/consumption-templates - Create or Update Service Recipe (Batch)
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { service_id, inventory_item_id, estimated_quantity, unit, notes } = body;
+        const { service_id, items } = body;
 
-        // Validate required fields
-        if (!service_id || !inventory_item_id || !estimated_quantity || !unit) {
+        // Expect items to be an array: { inventory_item_id, estimated_quantity, unit }[]
+        if (!service_id || !Array.isArray(items)) {
             return NextResponse.json(
-                { error: 'Missing required fields' },
+                { error: 'Invalid request format. Service ID and items array required.' },
                 { status: 400 }
             );
         }
 
-        // Check if template already exists
-        const [existing] = await pool.query<RowDataPacket[]>(
-            'SELECT id FROM service_consumption_templates WHERE service_id = ? AND inventory_item_id = ?',
-            [service_id, inventory_item_id]
-        );
-
-        if (existing.length > 0) {
-            return NextResponse.json(
-                { error: 'Template already exists for this service and item combination' },
-                { status: 409 }
-            );
+        // Validate items
+        for (const item of items) {
+            if (!item.inventory_item_id || !item.estimated_quantity || !item.unit) {
+                return NextResponse.json(
+                    { error: 'Each item must have inventory_item_id, quantity, and unit.' },
+                    { status: 400 }
+                );
+            }
         }
 
-        // Insert template
-        const [result] = await pool.query(
-            `INSERT INTO service_consumption_templates 
-            (service_id, inventory_item_id, estimated_quantity, unit, notes)
-            VALUES (?, ?, ?, ?, ?)`,
-            [service_id, inventory_item_id, estimated_quantity, unit, notes || null]
-        );
+        // Transaction: Delete existing -> Insert new
+        await pool.query('START TRANSACTION');
 
-        return NextResponse.json({
-            message: 'Template created successfully',
-            id: (result as any).insertId
-        });
+        try {
+            // 1. Delete existing templates for this service
+            await pool.query(
+                'DELETE FROM service_consumption_templates WHERE service_id = ?',
+                [service_id]
+            );
+
+            // 2. Insert new templates
+            if (items.length > 0) {
+                const values = items.map((item: any) => [
+                    service_id,
+                    item.inventory_item_id,
+                    item.estimated_quantity,
+                    item.unit
+                ]);
+
+                // Flatten for bulk insert
+                const flattenedValues = values.reduce((acc: any[], val: any[]) => acc.concat(val), []);
+                const placeholders = values.map(() => '(?, ?, ?, ?)').join(', ');
+
+                await pool.query(
+                    `INSERT INTO service_consumption_templates 
+                    (service_id, inventory_item_id, estimated_quantity, unit)
+                    VALUES ${placeholders}`,
+                    flattenedValues
+                );
+            }
+
+            await pool.query('COMMIT');
+
+            return NextResponse.json({
+                message: 'Service recipe updated successfully',
+                count: items.length
+            });
+
+        } catch (err) {
+            await pool.query('ROLLBACK');
+            throw err;
+        }
+
     } catch (error) {
-        console.error('Error creating consumption template:', error);
+        console.error('Error updating consumption template:', error);
         return NextResponse.json(
-            { error: 'Failed to create consumption template' },
+            { error: 'Failed to update consumption template' },
             { status: 500 }
         );
     }

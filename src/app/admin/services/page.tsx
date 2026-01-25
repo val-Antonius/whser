@@ -243,10 +243,6 @@ export default function ServiceManagementPage() {
             <PageHeader
                 title="Manajemen Proses Layanan"
                 description="Lacak dan kelola alur kerja pesanan dengan fitur lanjutan"
-                breadcrumbs={[
-                    { label: 'Dashboard', href: '/admin/dashboard/operations' },
-                    { label: 'Proses Layanan' }
-                ]}
                 actions={
                     <div className="flex gap-2">
                         <Link href="/admin/reports/aging">

@@ -196,6 +196,55 @@ None - All functionality working as expected.
 
 ---
 
+## Phase 6: Operational Gaps Implementation
+
+**Status**: ✅ Complete
+
+**Completed Date**: 2026-01-25
+
+### Key Implementations
+
+1.  **Service Recipes (Consumption Templates)**
+    -   Implemented `service_materials` table.
+    -   Auto-deduction logic: When Order Status -> `IN_WASH`, system calculates and subtracts inventory.
+    -   Replaced manual "Bundles" feature (Deprecated).
+
+2.  **Rewash Workflow Integration**
+    -   Rewash is now a "Cost Event", not a new order.
+    -   Triggering Rewash subtracts inventory again based on the recipe.
+    -   Added "Catat Rewash" button to Order Details.
+
+3.  **Aging Report V2**
+    -   Created optimized SQL View `view_order_aging` for performance.
+    -   New API `/api/reports/aging-v2` with precise buckets (Fresh, Warning, Critical).
+    -   Localized UI (Bahasa Indonesia) and fixed currency formatting.
+
+---
+
+## Phase 7: Stock Opname & Variance Analysis
+
+**Status**: ✅ Complete
+
+**Completed Date**: 2026-01-26
+
+### Key Implementations
+
+1.  **Stock Opname (Physical Count)**
+    -   New Module: `/admin/inventory/opname`.
+    -    Workflow: Open Opname -> Input Real Counts -> Submit -> System creates "Adjustment" transactions.
+    -   Features: "Fill Zero", "Fill System Stock" (Debug), Filter by Category.
+
+2.  **Variance Analysis Integration**
+    -   Unified Variance Report: Shows discrepancies from both **Sales** (Consumption vs Recipe) and **Opname** (System vs Physical).
+    -   Added educational info cards to explain the difference between "Usage Leakage" and "Physical Loss".
+
+3.  **Waste Tracking Polish**
+    -   Refined `/admin/inventory/waste` UI.
+    -   Full localization to Indonesian.
+    -   Clarified purpose: "Loss" (Spillage/Theft) vs "usage".
+
+---
+
 ## Phase 2.1: Advanced POS Features
 
 **Status**: ✅ Complete
@@ -475,6 +524,143 @@ None - All functionality working as expected.
 ### Known Issues
 
 None - All functionality working as expected.
+
+---
+
+## Phase 2.1B: Order Status Management Workflow
+
+**Status**: ✅ Complete
+
+**Completed Date**: 2026-01-25
+
+### Overview
+
+Implemented missing workflow management features from Phase 1.4 to enable proper order lifecycle management with status transitions and exception tracking.
+
+### Files Created
+
+**Frontend Components:**
+- [src/components/orders/ExceptionDialog.tsx](file:///d:/toni/cloningRepo/whser/src/components/orders/ExceptionDialog.tsx) - Modal dialog for creating order exceptions
+- [src/components/orders/ExceptionCard.tsx](file:///d:/toni/cloningRepo/whser/src/components/orders/ExceptionCard.tsx) - Component for displaying exception details
+
+### Files Modified
+
+**User Interfaces:**
+- [src/app/admin/orders/[id]/page.tsx](file:///d:/toni/cloningRepo/whser/src/app/admin/orders/%5Bid%5D/page.tsx) - Added status action buttons and exception tracking section
+
+### Files Verified (Already Existed)
+
+**API Routes:**
+- [src/app/api/orders/[id]/status/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/orders/%5Bid%5D/status/route.ts) - Status update API with validation
+- [src/app/api/orders/[id]/exceptions/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/orders/%5Bid%5D/exceptions/route.ts) - Exception tracking API (GET/POST)
+
+**Database:**
+- [database/migration_phase2.2.sql](file:///d:/toni/cloningRepo/whser/database/migration_phase2.2.sql) - order_exceptions table schema
+
+### Functionality Added
+
+1. **Dynamic Status Action Buttons**
+   - Context-aware buttons based on current order status
+   - 9 status transitions supported:
+     - received → waiting_for_process (Start Processing)
+     - waiting_for_process → in_wash (Start Wash)
+     - in_wash → in_dry (Move to Dry)
+     - in_dry → in_iron (Move to Iron)
+     - in_iron → in_fold (Move to Fold)
+     - in_fold → ready_for_qc (Ready for QC)
+     - ready_for_qc → completed (Mark as Completed)
+     - completed → ready_for_pickup (Ready for Pickup)
+     - ready_for_pickup → closed (Mark as Picked Up)
+   - Automatic actual_completion timestamp for completed status
+   - Status transition validation via API
+
+2. **Exception Tracking**
+   - Exception creation dialog with:
+     - 5 exception types: stain_treatment, delay, damage, missing_item, other
+     - 4 severity levels: low, medium, high, critical
+     - Description validation (min 10 characters)
+   - Exception display cards showing:
+     - Color-coded severity badges
+     - Status indicators (open/in_progress/resolved/escalated)
+     - Reported by/at information
+     - Resolution notes (when resolved)
+   - Exception list in Order Detail page
+   - Empty state when no exceptions exist
+
+3. **API Integration**
+   - handleUpdateStatus() - Updates order status with validation
+   - handleCreateException() - Creates new exception
+   - fetchExceptions() - Loads exceptions on page load
+   - Auto-refresh after successful operations
+   - Error handling and user notifications
+
+### Status Workflow
+
+**Normal Flow:**
+```
+received → waiting_for_process → in_wash → in_dry → in_iron → in_fold → ready_for_qc → completed → ready_for_pickup → closed
+```
+
+**Special Flows:**
+- Rewash: ready_for_qc → qc_failed → in_wash
+- Cancel: Any status → cancelled (except closed)
+- Optional steps: in_dry and in_iron can be skipped
+
+**Validation Rules:**
+- Cannot skip required steps
+- Cannot go backwards (except rewash)
+- Cannot update closed or cancelled orders
+- actual_completion required when marking as completed
+
+### Exception Types
+
+| Type | Description |
+|------|-------------|
+| stain_treatment | Special stain removal required |
+| delay | Order delayed beyond SLA |
+| damage | Item damaged during processing |
+| missing_item | Item lost or missing |
+| other | Other exceptions |
+
+### Known Limitations
+
+1. **User Session**: Currently hardcoded user ID (1) for reported_by and changed_by
+   - TODO: Integrate with authentication system
+
+2. **Optional Steps**: in_dry and in_iron can be skipped
+   - TODO: Add skip buttons in future iteration
+
+3. **QC Failed Flow**: qc_failed status exists but no dedicated button
+   - TODO: Add QC Pass/Fail buttons on ready_for_qc status
+
+4. **Exception Resolution**: Resolution not yet implemented
+   - TODO: Add resolution dialog and API endpoint
+
+### Testing Status
+
+✅ **Completed:**
+- Backend APIs functional
+- Frontend components render correctly
+- Status buttons appear dynamically
+- Exception dialog opens and closes
+- Form validation works
+
+⏳ **To Be Tested:**
+- Full status workflow (received → closed)
+- Status transition validation
+- Exception creation and display
+- Error handling for invalid transitions
+
+### Next Steps
+
+1. User testing of status workflow
+2. Add skip buttons for optional steps (dry/iron)
+3. Implement QC Pass/Fail buttons
+4. Add exception resolution functionality
+5. Integrate with user authentication
+6. Add status timeline visualization
+
+---
 
 ### Next Steps
 
@@ -1794,3 +1980,103 @@ Ready for Phase 4 (LLM Integration) to add automated insight generation!
 **Last Updated**: 2026-01-25  
 **Current Phase**: 3.4 (COMPLETE)  
 **Next Milestone**: Phase 4 - LLM Integration (Gemma 3 4B)
+
+
+## Evaluation: Dashboard UX Improvements
+
+**Status**:  Complete
+
+**Completed Date**: 2026-01-25
+
+### Overview
+
+Evaluated and improved the dashboard user experience based on KPI ambiguity issues and navigation redundancy. Implemented a toggle switch system to seamlessly flip between Quick Overview and Operational Metrics views, consolidated navigation into a global sidebar, and clarified KPI meanings.
+
+### Problem Identified
+
+**KPI Ambiguity Issue:**
+- "Completed" KPI was confusing because it decreased when orders were picked up
+- The KPI showed `status IN ('completed', 'ready_for_pickup')` but changed to `'closed'` after pickup
+- Users couldn't distinguish between "ready for pickup" and "transaction closed"
+
+**Navigation Redundancy:**
+- Two separate dashboard pages: `/admin/dashboard` and `/admin/dashboard/operations`
+- Header navigation duplicated sidebar functionality
+- Breadcrumbs were redundant with global sidebar
+
+### Solution Implemented
+
+**1. Dashboard Toggle Switch**
+- Single dashboard at `/admin/dashboard` with animated toggle switch
+- Toggle between "Quick Overview"  "Operational Metrics" views
+- No page navigation required - instant content switching
+- Smooth animation using custom Switch component
+
+**2. KPI Restructuring**
+- Renamed "Completed"  "Ready for Pickup" (clearer meaning)
+- Added new "Closed" KPI for completed transactions
+- Expanded from 4 to 5 KPIs for better clarity
+
+**3. Global Sidebar Navigation**
+- Moved all header navigation to global sidebar
+- Added collapsible Reports menu
+- Added collapsible Inventory+ menu
+- Removed redundant breadcrumbs from all pages
+
+### Files Created
+
+**Components:**
+- `src/components/ui/switch.tsx` - Animated toggle switch component
+- `src/components/dashboard/OperationalMetricsContent.tsx` - Operational metrics content
+
+### Files Modified
+
+**Navigation:**
+- `src/components/layout/Sidebar.tsx` - Added all navigation items and collapsible menus
+
+**Dashboard:**
+- `src/app/admin/dashboard/page.tsx` - Complete redesign with toggle switch
+
+**Removed Breadcrumbs:**
+- `src/app/admin/pos/page.tsx`
+- `src/app/admin/services/page.tsx`
+- `src/app/admin/inventory/page.tsx`
+- `src/app/admin/customers/page.tsx`
+
+### Files Deleted
+
+- `src/app/admin/dashboard/operations/` - Entire directory removed
+
+### New Dashboard Structure
+
+**Quick Overview (Default View):**
+- Period selector: Today / This Week / This Month
+- **5 KPI Cards:**
+  1. **Total Orders** - All orders in period
+  2. **Active Orders** - Orders in progress
+  3. **Ready for Pickup** - Awaiting customer pickup
+  4. **Closed** - Transactions completed
+  5. **Revenue** - Total paid + pending
+- Service Breakdown chart
+- Order Status Distribution chart
+
+**Operational Metrics (Toggle View):**
+- Custom date range picker
+- SLA Compliance, Rewash Rate, Complaint Rate
+- Productivity Indicators
+- Capacity Utilization gauge
+- Contribution Margin table
+
+### Key Achievements
+
+ **Toggle Switch UX**: Seamless view switching without navigation  
+ **KPI Clarity**: Renamed and added KPIs for clear meaning  
+ **Global Navigation**: Consolidated sidebar with all menu items  
+ **Clean UI**: Removed redundant breadcrumbs  
+ **Code Consolidation**: Deleted standalone operations page
+
+---
+
+**Last Updated**: 2026-01-25  
+**Current Phase**: Evaluation (COMPLETE)  
+**Next Milestone**: Continue with planned features or address new user feedback

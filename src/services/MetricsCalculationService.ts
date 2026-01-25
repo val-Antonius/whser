@@ -396,25 +396,65 @@ export async function calculateInventoryVariance(
     periodEnd: string,
     periodType: string
 ): Promise<MetricResult> {
-    // Note: This metric requires consumption_templates table from Phase 2.3
-    // For now, return a placeholder metric
-    const baseline = await getBaselineMetric('inventory_variance_avg', periodType, periodStart) ?? 10.0;
+    // Phase 7 Integration: Calculate variance from Stock Opnames
+    const rows = await query<InventoryVarianceRow[]>(
+        `SELECT 
+            i.item_name,
+            SUM(soi.system_qty) as expected_qty,
+            SUM(soi.physical_qty) as actual_qty
+         FROM stock_opname_items soi
+         JOIN stock_opnames so ON soi.opname_id = so.id
+         JOIN inventory_items i ON soi.inventory_item_id = i.id
+         WHERE so.status = 'completed'
+           AND so.submitted_at >= ? AND so.submitted_at < DATE_ADD(?, INTERVAL 1 DAY)
+         GROUP BY i.id, i.item_name`,
+        [periodStart, periodEnd]
+    );
+
+    const totalSystem = rows.reduce((sum, row) => sum + Number(row.expected_qty), 0);
+    const totalPhysical = rows.reduce((sum, row) => sum + Number(row.actual_qty), 0);
+
+    // Variance = Actual - System (Negative means loss)
+    const netVariance = totalPhysical - totalSystem;
+
+    // Variance % = (Net / Expected) * 100
+    const variancePercentage = totalSystem > 0
+        ? (netVariance / totalSystem) * 100
+        : 0;
+
+    const baseline = await getBaselineMetric('inventory_variance_avg', periodType, periodStart) ?? 0;
+
+    // For variance, we compare absolute deviation or net loss
+    // Here we treat negative variance (loss) as the concern
+    const comparison = compareWithBaseline(variancePercentage, baseline, { attention: 2, critical: 5 });
+
+    // Top items with variance
+    const by_item: Record<string, { expected: number; actual: number; variance: number }> = {};
+    rows.forEach(row => {
+        if (row.expected_qty !== row.actual_qty) {
+            by_item[row.item_name] = {
+                expected: Number(row.expected_qty),
+                actual: Number(row.actual_qty),
+                variance: Number(row.actual_qty) - Number(row.expected_qty)
+            };
+        }
+    });
 
     return {
         metric_name: 'inventory_variance_avg',
-        metric_value: 0,
+        metric_value: variancePercentage,
         baseline_value: baseline,
-        variance: baseline !== null ? 0 - baseline : null,
-        variance_percentage: baseline !== null && baseline !== 0 ? ((0 - baseline) / baseline) * 100 : null,
-        significance_level: 'normal',
+        variance: variancePercentage - baseline,
+        variance_percentage: comparison.variance_percentage,
+        significance_level: Math.abs(variancePercentage) > 5 ? 'critical' : Math.abs(variancePercentage) > 2 ? 'attention' : 'normal',
         metadata: {
-            note: 'Requires consumption_templates table from Phase 2.3',
-            by_item: {},
-            item_count: 0
+            total_expected: totalSystem,
+            total_actual: totalPhysical,
+            net_variance: netVariance,
+            by_item,
+            item_count: rows.length
         }
     };
-
-
 }
 
 /**

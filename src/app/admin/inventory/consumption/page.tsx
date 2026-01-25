@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import ConsumptionTemplateModal from '@/components/inventory/ConsumptionTemplateModal';
 import ConsumptionTemplateList from '@/components/inventory/ConsumptionTemplateList';
+import ServiceRecipeDialog from '@/components/inventory/ServiceRecipeDialog';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { HelpCircle } from 'lucide-react';
 
 export default function ConsumptionManagementPage() {
     const [templates, setTemplates] = useState([]);
@@ -51,22 +53,58 @@ export default function ConsumptionManagementPage() {
         <div className="p-6">
             {/* Header */}
             <div className="mb-6">
-                <h1 className="text-3xl font-bold mb-2">Consumption Templates</h1>
+                <h1 className="text-3xl font-bold mb-2">Resep Layanan (Service Recipes)</h1>
                 <p className="text-gray-600">
-                    Define expected inventory consumption per service type
+                    Definisikan komposisi bahan (resep) untuk setiap jenis layanan.
                 </p>
             </div>
+
+            {/* Educational Info Card */}
+            <Card className="mb-6 bg-green-50 border-green-200">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-green-900">
+                        <HelpCircle className="h-5 w-5 text-green-600" />
+                        Apa itu Service Recipes?
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                    <div>
+                        <strong className="text-sm text-gray-900">Fungsi:</strong>
+                        <p className="text-sm text-gray-700">Mengatur resep otomatis. Saat order dibuat, stok bahan-bahan ini akan otomatis terpotong.</p>
+                    </div>
+                    <div>
+                        <strong className="text-sm text-gray-900">Contoh:</strong>
+                        <p className="text-sm text-gray-700">Layanan "Cuci Kering" menggunakan 50ml deterjen per kg + 30ml softener per kg.</p>
+                    </div>
+                    <div>
+                        <strong className="text-sm text-gray-900">Manfaat:</strong>
+                        <ul className="text-sm text-gray-700 list-disc list-inside space-y-1">
+                            <li>Estimasi kebutuhan inventory</li>
+                            <li>Deteksi pemborosan (jika actual &gt; template)</li>
+                            <li>Hitung ideal cost per order</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <strong className="text-sm text-gray-900">Flow Real:</strong>
+                        <ol className="text-sm text-gray-700 list-decimal list-inside space-y-1">
+                            <li>Set consumption template per layanan</li>
+                            <li>Sistem hitung estimasi konsumsi saat order dibuat</li>
+                            <li>Bandingkan actual vs template untuk analisis variance</li>
+                        </ol>
+                    </div>
+                </CardContent>
+            </Card>
 
             {/* Action Bar */}
             <div className="mb-6 flex justify-between items-center">
                 <div className="text-sm text-gray-600">
-                    {templates.length} template{templates.length !== 1 ? 's' : ''} configured
+                    {templates.length} template dikonfigurasi
                 </div>
                 <button
                     onClick={() => setIsModalOpen(true)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium flex items-center gap-2"
                 >
-                    + Add Template
+                    + Kelola Resep
                 </button>
             </div>
 
@@ -93,7 +131,7 @@ export default function ConsumptionManagementPage() {
             )}
 
             {/* Create Modal */}
-            <ConsumptionTemplateModal
+            <ServiceRecipeDialog
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onSuccess={() => {

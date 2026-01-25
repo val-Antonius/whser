@@ -10,7 +10,11 @@ import {
     Users,
     Settings,
     X,
-    Menu
+    Menu,
+    ChevronDown,
+    ChevronRight,
+    FileText,
+    PackagePlus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -25,13 +29,29 @@ interface SidebarProps {
 export function Sidebar({ className }: SidebarProps) {
     const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
+    const [reportsOpen, setReportsOpen] = useState(false);
+    const [inventoryPlusOpen, setInventoryPlusOpen] = useState(false);
 
     const navigation = [
-        { name: 'Dashboard', href: '/admin/dashboard/operations', icon: LayoutDashboard },
-        { name: 'Kasir', href: '/admin/pos', icon: ShoppingCart },
-        { name: 'Layanan', href: '/admin/services', icon: Shirt },
-        { name: 'Inventori', href: '/admin/inventory', icon: Package },
-        { name: 'Pelanggan', href: '/admin/customers', icon: Users },
+        { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+        { name: 'POS', href: '/admin/pos', icon: ShoppingCart },
+        { name: 'Orders', href: '/admin/orders', icon: Shirt },
+        { name: 'Service Management', href: '/admin/services', icon: Shirt },
+        { name: 'Inventory', href: '/admin/inventory', icon: Package },
+        { name: 'Customers', href: '/admin/customers', icon: Users },
+    ];
+
+    const reportsMenu = [
+        { name: 'Order Aging Report', href: '/admin/reports/aging' },
+        { name: 'Inventory Usage', href: '/admin/reports/inventory-usage' },
+    ];
+
+    const inventoryPlusMenu = [
+        { name: 'Stock Overview', href: '/admin/inventory' },
+        { name: 'Consumption Templates', href: '/admin/inventory/consumption' },
+        { name: 'Variance Analysis', href: '/admin/inventory/variance' },
+        { name: 'Waste Tracking', href: '/admin/inventory/waste' },
+        { name: 'Stock Opname (Physical Count)', href: '/admin/inventory/opname' },
     ];
 
     const NavContent = () => (
@@ -44,7 +64,7 @@ export function Sidebar({ className }: SidebarProps) {
                 <p className="text-xs text-slate-400 mt-1">Operational System</p>
             </div>
 
-            <nav className="flex-1 p-4 space-y-1">
+            <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
                 {navigation.map((item) => {
                     const isActive = pathname.startsWith(item.href);
                     return (
@@ -64,6 +84,62 @@ export function Sidebar({ className }: SidebarProps) {
                         </Link>
                     );
                 })}
+
+                {/* Reports Dropdown */}
+                <div>
+                    <button
+                        onClick={() => setReportsOpen(!reportsOpen)}
+                        className="flex items-center justify-between w-full px-3 py-3 text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white rounded-md transition-colors"
+                    >
+                        <div className="flex items-center gap-3">
+                            <FileText className="h-5 w-5" />
+                            Reports
+                        </div>
+                        {reportsOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    </button>
+                    {reportsOpen && (
+                        <div className="ml-8 mt-1 space-y-1">
+                            {reportsMenu.map((item) => (
+                                <Link
+                                    key={item.name}
+                                    href={item.href}
+                                    onClick={() => setIsOpen(false)}
+                                    className="block px-3 py-2 text-sm text-slate-400 hover:text-white hover:bg-slate-800 rounded-md transition-colors"
+                                >
+                                    {item.name}
+                                </Link>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* Inventory+ Dropdown */}
+                <div>
+                    <button
+                        onClick={() => setInventoryPlusOpen(!inventoryPlusOpen)}
+                        className="flex items-center justify-between w-full px-3 py-3 text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white rounded-md transition-colors"
+                    >
+                        <div className="flex items-center gap-3">
+                            <PackagePlus className="h-5 w-5" />
+                            Inventory+
+                        </div>
+                        {inventoryPlusOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    </button>
+                    {inventoryPlusOpen && (
+                        <div className="ml-8 mt-1 space-y-1">
+                            {inventoryPlusMenu.map((item) => (
+                                <Link
+                                    key={item.name}
+                                    href={item.href}
+                                    onClick={() => setIsOpen(false)}
+                                    className="block px-3 py-2 text-sm text-slate-400 hover:text-white hover:bg-slate-800 rounded-md transition-colors"
+                                >
+                                    {item.name}
+                                </Link>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </nav>
 
             <div className="p-4 border-t border-slate-800">

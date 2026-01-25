@@ -116,10 +116,10 @@ export async function POST(request: NextRequest) {
         let newStock: number;
 
         if (transaction_type === InventoryTransactionType.STOCK_IN ||
-            transaction_type === InventoryTransactionType.ADJUSTMENT_IN) {
+            transaction_type === 'adjustment_in') {
             newStock = currentStock + quantity;
         } else if (transaction_type === InventoryTransactionType.STOCK_OUT ||
-            transaction_type === InventoryTransactionType.ADJUSTMENT_OUT ||
+            transaction_type === 'adjustment_out' ||
             transaction_type === InventoryTransactionType.CONSUMPTION) {
             newStock = currentStock - quantity;
             if (newStock < 0) {
@@ -141,6 +141,11 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Map extended types to DB types
+        const dbTransactionType = (transaction_type === 'adjustment_in' || transaction_type === 'adjustment_out')
+            ? 'adjustment'
+            : transaction_type;
+
         // Create transaction in database transaction
         const result = await transaction(async (conn) => {
             // Insert transaction record
@@ -151,7 +156,7 @@ export async function POST(request: NextRequest) {
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
                     inventory_item_id,
-                    transaction_type,
+                    dbTransactionType,
                     quantity,
                     unit_cost || null,
                     currentStock,

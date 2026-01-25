@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { InventoryCategory, InventoryTransactionType } from '@/types';
 import { PageHeader } from '@/components/layout/PageHeader';
+import InventoryItemModal from '@/components/inventory/InventoryItemModal'; // Added import
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Search, AlertTriangle, RefreshCw, Plus, History } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface InventoryItem {
     id: number;
@@ -48,12 +50,13 @@ export default function InventoryPage() {
     const [categoryFilter, setCategoryFilter] = useState('');
     const [showLowStockOnly, setShowLowStockOnly] = useState(false);
     const [showRecordForm, setShowRecordForm] = useState(false);
+    const [showAddItemModal, setShowAddItemModal] = useState(false); // Added state
     const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
     const [isRecording, setIsRecording] = useState(false);
     const [error, setError] = useState('');
 
     const [recordForm, setRecordForm] = useState({
-        transaction_type: InventoryTransactionType.STOCK_IN,
+        transaction_type: InventoryTransactionType.STOCK_IN as string,
         quantity: '',
         unit_cost: '',
         reference_number: '',
@@ -157,6 +160,7 @@ export default function InventoryPage() {
         const colors: Record<string, string> = {
             stock_in: 'bg-green-100 text-green-800',
             stock_out: 'bg-red-100 text-red-800',
+            adjustment: 'bg-blue-100 text-blue-800',
             adjustment_in: 'bg-blue-100 text-blue-800',
             adjustment_out: 'bg-orange-100 text-orange-800',
             consumption: 'bg-purple-100 text-purple-800',
@@ -177,15 +181,34 @@ export default function InventoryPage() {
             <PageHeader
                 title="Manajemen Inventori"
                 description="Lacak dan kelola stok barang dan perlengkapan"
-                breadcrumbs={[
-                    { label: 'Dashboard', href: '/admin/dashboard/operations' },
-                    { label: 'Inventori' }
-                ]}
                 actions={
-                    <Button onClick={fetchInventory} variant="outline" size="sm">
-                        <RefreshCw className="mr-2 h-4 w-4" />
-                        Refresh
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button
+                            onClick={() => setShowAddItemModal(true)}
+                            size="sm"
+                        >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Tambah Barang Baru
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                // Find first item to open transaction modal
+                                if (items.length > 0) {
+                                    setSelectedItem(items[0]);
+                                    setShowRecordForm(true);
+                                }
+                            }}
+                            variant="outline"
+                            size="sm"
+                        >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Catat Stok
+                        </Button>
+                        <Button onClick={fetchInventory} variant="outline" size="sm">
+                            <RefreshCw className="mr-2 h-4 w-4" />
+                            Refresh
+                        </Button>
+                    </div>
                 }
             />
 
@@ -195,21 +218,20 @@ export default function InventoryPage() {
                     <div className="lg:col-span-2 space-y-6">
                         {/* Filters & Alerts */}
                         {lowStockItems.length > 0 && !showLowStockOnly && (
-                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <AlertTriangle className="h-5 w-5 text-yellow-600" />
-                                    <span className="font-semibold text-yellow-800">
-                                        {lowStockItems.length} barang stok menipis atau habis
-                                    </span>
-                                </div>
-                                <Button
-                                    variant="link"
-                                    className="text-yellow-700 hover:text-yellow-900"
-                                    onClick={() => setShowLowStockOnly(true)}
-                                >
-                                    Lihat Barang
-                                </Button>
-                            </div>
+                            <Alert variant="destructive" className="border-red-300 bg-red-50">
+                                <AlertTriangle className="h-5 w-5 animate-pulse" />
+                                <AlertTitle className="font-bold text-red-800">PERINGATAN: Stok Menipis!</AlertTitle>
+                                <AlertDescription className="text-red-700">
+                                    {lowStockItems.length} barang memerlukan restock segera.
+                                    <Button
+                                        variant="link"
+                                        className="text-red-700 hover:text-red-900 p-0 h-auto ml-2 underline"
+                                        onClick={() => setShowLowStockOnly(true)}
+                                    >
+                                        Lihat Daftar →
+                                    </Button>
+                                </AlertDescription>
+                            </Alert>
                         )}
 
                         <Card>
@@ -299,8 +321,8 @@ export default function InventoryPage() {
                                                                     setError('');
                                                                 }}
                                                             >
-                                                                Unit Cost: Rp {item.unit_cost?.toLocaleString('id-ID')}
-                                                                <Plus className="ml-2 h-3 w-3" />
+                                                                <Plus className="mr-2 h-3 w-3" />
+                                                                Catat Transaksi Stok
                                                             </Button>
                                                         </TableCell>
                                                     </TableRow>
@@ -384,7 +406,7 @@ export default function InventoryPage() {
                             <Label>Tipe Transaksi</Label>
                             <Select
                                 value={recordForm.transaction_type}
-                                onValueChange={(val) => setRecordForm({ ...recordForm, transaction_type: val as InventoryTransactionType })}
+                                onValueChange={(val) => setRecordForm({ ...recordForm, transaction_type: val })}
                             >
                                 <SelectTrigger>
                                     <SelectValue />
@@ -392,8 +414,8 @@ export default function InventoryPage() {
                                 <SelectContent>
                                     <SelectItem value={InventoryTransactionType.STOCK_IN}>Stok Masuk (Beli/Terima)</SelectItem>
                                     <SelectItem value={InventoryTransactionType.STOCK_OUT}>Stok Keluar (Rusak/Hilang)</SelectItem>
-                                    <SelectItem value={InventoryTransactionType.ADJUSTMENT_IN}>Koreksi Masuk (Opname)</SelectItem>
-                                    <SelectItem value={InventoryTransactionType.ADJUSTMENT_OUT}>Koreksi Keluar (Opname)</SelectItem>
+                                    <SelectItem value="adjustment_in">Koreksi Masuk (Opname)</SelectItem>
+                                    <SelectItem value="adjustment_out">Koreksi Keluar (Opname)</SelectItem>
                                     <SelectItem value={InventoryTransactionType.CONSUMPTION}>Pemakaian (Produksi)</SelectItem>
                                 </SelectContent>
                             </Select>
@@ -448,6 +470,15 @@ export default function InventoryPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* Add Item Modal */}
+            <InventoryItemModal
+                isOpen={showAddItemModal}
+                onClose={() => setShowAddItemModal(false)}
+                onSuccess={() => {
+                    fetchInventory();
+                }}
+            />
         </div>
     );
 }

@@ -72,7 +72,7 @@ export default function CostAttributionCard({ orderId }: CostAttributionCardProp
                 <div className="bg-blue-50 border border-blue-200 rounded p-3">
                     <div className="text-sm text-blue-700">Total Inventory Cost</div>
                     <div className="text-xl font-bold text-blue-800">
-                        ₱{totalInventoryCost.toFixed(2)}
+                        Rp {totalInventoryCost.toLocaleString('id-ID')}
                     </div>
                     <div className="text-xs text-blue-600 mt-1">
                         {costData.items_used} items used
@@ -83,7 +83,7 @@ export default function CostAttributionCard({ orderId }: CostAttributionCardProp
                         Profit Margin
                     </div>
                     <div className={`text-xl font-bold ${profitMargin >= 0 ? 'text-green-800' : 'text-red-800'}`}>
-                        ₱{profitMargin.toFixed(2)}
+                        Rp {profitMargin.toLocaleString('id-ID')}
                     </div>
                     <div className={`text-xs mt-1 ${profitMargin >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                         {profitPercentage.toFixed(1)}% of price
@@ -101,11 +101,11 @@ export default function CostAttributionCard({ orderId }: CostAttributionCardProp
                                 <div>
                                     <div className="font-medium">{item.item_name}</div>
                                     <div className="text-xs text-gray-600">
-                                        {item.quantity} × ₱{parseFloat(item.cost_per_unit || 0).toFixed(2)}
+                                        {item.quantity} × Rp {parseFloat(item.cost_per_unit || 0).toLocaleString('id-ID')}
                                     </div>
                                 </div>
                                 <div className="font-semibold">
-                                    ₱{parseFloat(item.total_cost || 0).toFixed(2)}
+                                    Rp {parseFloat(item.total_cost || 0).toLocaleString('id-ID')}
                                 </div>
                             </div>
                         ))}

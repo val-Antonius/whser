@@ -1,6 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 
 interface ConsumptionTemplateModalProps {
     serviceId?: number;
@@ -11,34 +20,74 @@ interface ConsumptionTemplateModalProps {
 }
 
 export default function ConsumptionTemplateModal({
-    serviceId,
+    serviceId: initialServiceId,
     serviceName,
     isOpen,
     onClose,
     onSuccess
 }: ConsumptionTemplateModalProps) {
+    const [serviceId, setServiceId] = useState(initialServiceId?.toString() || '');
+    const [services, setServices] = useState<any[]>([]);
+    const [inventoryItems, setInventoryItems] = useState<any[]>([]);
     const [inventoryItemId, setInventoryItemId] = useState('');
     const [estimatedQuantity, setEstimatedQuantity] = useState('');
-    const [unit, setUnit] = useState('ml');
-    const [notes, setNotes] = useState('');
+    const [unit, setUnit] = useState('per_kg');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+
+    // Fetch services and inventory items on mount
+    useEffect(() => {
+        if (isOpen) {
+            fetchServices();
+            fetchInventoryItems();
+        }
+    }, [isOpen]);
+
+    const fetchServices = async () => {
+        try {
+            const response = await fetch('/api/services');
+            const data = await response.json();
+            if (data.success) {
+                setServices(data.data || []);
+            }
+        } catch (error) {
+            console.error('Error fetching services:', error);
+        }
+    };
+
+    const fetchInventoryItems = async () => {
+        try {
+            const response = await fetch('/api/inventory');
+            const data = await response.json();
+            if (data.success) {
+                setInventoryItems(data.data || []);
+            }
+        } catch (error) {
+            console.error('Error fetching inventory items:', error);
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError('');
 
+        // Validate required fields
+        if (!serviceId || !inventoryItemId || !estimatedQuantity || !unit) {
+            setError('Semua field wajib diisi');
+            setLoading(false);
+            return;
+        }
+
         try {
             const response = await fetch('/api/inventory/consumption-templates', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    service_id: serviceId,
+                    service_id: parseInt(serviceId),
                     inventory_item_id: parseInt(inventoryItemId),
                     estimated_quantity: parseFloat(estimatedQuantity),
-                    unit,
-                    notes
+                    unit // Passes 'per_kg', 'per_pc', etc.
                 })
             });
 
@@ -57,10 +106,10 @@ export default function ConsumptionTemplateModal({
     };
 
     const handleClose = () => {
+        setServiceId(initialServiceId?.toString() || '');
         setInventoryItemId('');
         setEstimatedQuantity('');
-        setUnit('ml');
-        setNotes('');
+        setUnit('per_kg');
         setError('');
         onClose();
     };
@@ -69,80 +118,97 @@ export default function ConsumptionTemplateModal({
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl animate-in fade-in zoom-in-95 duration-200">
                 <h2 className="text-xl font-bold mb-4">
-                    Add Consumption Template
-                    {serviceName && <span className="text-gray-600 text-base ml-2">for {serviceName}</span>}
+                    Tambah Resep Layanan
                 </h2>
 
                 <form onSubmit={handleSubmit}>
                     <div className="space-y-4">
+                        {/* Service Selection */}
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                Layanan <span className="text-red-500">*</span>
+                            </label>
+                            <Select
+                                value={serviceId}
+                                onValueChange={(val) => setServiceId(val)}
+                                disabled={!!initialServiceId}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Pilih layanan..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {services.map((service) => (
+                                        <SelectItem key={service.id} value={service.id.toString()}>
+                                            {service.service_name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
                         {/* Inventory Item Selection */}
-                        <div>
-                            <label className="block text-sm font-medium mb-1">
-                                Inventory Item <span className="text-red-500">*</span>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                Barang Inventory <span className="text-red-500">*</span>
                             </label>
-                            <select
+                            <Select
                                 value={inventoryItemId}
-                                onChange={(e) => setInventoryItemId(e.target.value)}
-                                className="w-full border rounded px-3 py-2"
-                                required
+                                onValueChange={(val) => setInventoryItemId(val)}
                             >
-                                <option value="">Select item...</option>
-                                {/* TODO: Populate from API */}
-                                <option value="1">Detergent</option>
-                                <option value="2">Fabric Softener</option>
-                                <option value="3">Bleach</option>
-                            </select>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Pilih barang..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {inventoryItems.map((item) => (
+                                        <SelectItem key={item.id} value={item.id.toString()}>
+                                            {item.item_name} ({item.item_code})
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
 
-                        {/* Estimated Quantity */}
-                        <div>
-                            <label className="block text-sm font-medium mb-1">
-                                Estimated Quantity <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="number"
-                                step="0.01"
-                                value={estimatedQuantity}
-                                onChange={(e) => setEstimatedQuantity(e.target.value)}
-                                className="w-full border rounded px-3 py-2"
-                                placeholder="0.00"
-                                required
-                            />
-                        </div>
+                        {/* Estimated Quantity & Unit */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                    Jumlah <span className="text-red-500">*</span>
+                                </label>
+                                <Input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={estimatedQuantity}
+                                    onChange={(e) => setEstimatedQuantity(e.target.value)}
+                                    placeholder="0.00"
+                                    required
+                                />
+                            </div>
 
-                        {/* Unit */}
-                        <div>
-                            <label className="block text-sm font-medium mb-1">
-                                Unit <span className="text-red-500">*</span>
-                            </label>
-                            <select
-                                value={unit}
-                                onChange={(e) => setUnit(e.target.value)}
-                                className="w-full border rounded px-3 py-2"
-                                required
-                            >
-                                <option value="ml">Milliliters (ml)</option>
-                                <option value="g">Grams (g)</option>
-                                <option value="kg">Kilograms (kg)</option>
-                                <option value="l">Liters (l)</option>
-                                <option value="pieces">Pieces</option>
-                                <option value="units">Units</option>
-                            </select>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                    Satuan <span className="text-red-500">*</span>
+                                </label>
+                                <Select
+                                    value={unit}
+                                    onValueChange={(val) => setUnit(val)}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Pilih satuan" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="per_kg">Per Kg</SelectItem>
+                                        <SelectItem value="per_pc">Per Pcs</SelectItem>
+                                        <SelectItem value="per_order">Per Order (Flat)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
-
-                        {/* Notes */}
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Notes</label>
-                            <textarea
-                                value={notes}
-                                onChange={(e) => setNotes(e.target.value)}
-                                className="w-full border rounded px-3 py-2"
-                                rows={3}
-                                placeholder="Optional notes about this consumption pattern..."
-                            />
-                        </div>
+                        <p className="text-xs text-gray-500">
+                            Contoh: 10 (ml) per Kg. Sistem otomatis menghitung total berdasarkan berat order.
+                        </p>
 
                         {/* Error Message */}
                         {error && (
@@ -153,21 +219,22 @@ export default function ConsumptionTemplateModal({
 
                         {/* Buttons */}
                         <div className="flex gap-3 pt-4">
-                            <button
+                            <Button
                                 type="button"
+                                variant="outline"
                                 onClick={handleClose}
-                                className="flex-1 px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
                                 disabled={loading}
+                                className="flex-1"
                             >
-                                Cancel
-                            </button>
-                            <button
+                                Batal
+                            </Button>
+                            <Button
                                 type="submit"
-                                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
                                 disabled={loading}
+                                className="flex-1 bg-blue-600 hover:bg-blue-700"
                             >
-                                {loading ? 'Creating...' : 'Create Template'}
-                            </button>
+                                {loading ? 'Menyimpan...' : 'Simpan Resep'}
+                            </Button>
                         </div>
                     </div>
                 </form>

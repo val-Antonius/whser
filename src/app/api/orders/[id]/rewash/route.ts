@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { validateAuthorizationCode } from '@/lib/authorization';
+import { InventoryService } from '@/lib/services/inventory-service';
 
 // GET /api/orders/[id]/rewash - Get rewash history for an order
 export async function GET(
@@ -126,6 +127,12 @@ export async function POST(
                 1  // TODO: Get actual user ID from session (creator)
             ]
         );
+
+        // TRIGGER: Auto-Consumption for Rewash
+        // Run asynchronously
+        InventoryService.processRewashConsumption(orderId, result.insertId, 1).catch(err => {
+            console.error('Background rewash consumption failed:', err);
+        });
 
         // Fetch the created rewash event
         const [newEvent] = await pool.query<RowDataPacket[]>(
