@@ -1559,3 +1559,238 @@ Open drill-down modal with metadata
 **Last Updated**: 2026-01-25  
 **Current Phase**: 3.3 (COMPLETE)  
 **Next Milestone**: Phase 3.4 - Manual Insight Creation
+
+---
+
+## Phase 3.4: Manual Insight Creation
+
+**Status**: ✅ Complete
+
+**Completed Date**: 2026-01-25
+
+### Overview
+
+Built a manual insight management system that allows the Owner to create, view, edit, and delete insights based on calculated metrics. This is the pre-LLM phase where insights are manually written by the Owner.
+
+### Files Created
+
+**Services:**
+- [src/services/InsightService.ts](file:///d:/toni/cloningRepo/whser/src/services/InsightService.ts) - CRUD operations for insights
+
+**API Routes:**
+- [src/app/api/analytics/insights/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/analytics/insights/route.ts) - GET and POST insights
+- [src/app/api/analytics/insights/[id]/route.ts](file:///d:/toni/cloningRepo/whser/src/app/api/analytics/insights/[id]/route.ts) - GET, PUT, DELETE by ID
+
+**Components:**
+- [src/components/analytics/InsightCard.tsx](file:///d:/toni/cloningRepo/whser/src/components/analytics/InsightCard.tsx) - Display insight in list
+- [src/components/analytics/InsightForm.tsx](file:///d:/toni/cloningRepo/whser/src/components/analytics/InsightForm.tsx) - Create/edit form
+
+**Pages:**
+- [src/app/owner/insights/page.tsx](file:///d:/toni/cloningRepo/whser/src/app/owner/insights/page.tsx) - Main insights page
+
+### Database Schema
+
+Uses existing `insights` table from Phase 3.1 migration:
+
+```sql
+CREATE TABLE insights (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    snapshot_id INT NOT NULL,
+    statement TEXT NOT NULL,
+    severity ENUM('normal', 'attention', 'critical') DEFAULT 'normal',
+    metrics_involved JSON,
+    generated_by ENUM('system', 'llm', 'manual') DEFAULT 'manual',
+    llm_confidence DECIMAL(5,2),
+    is_actionable BOOLEAN DEFAULT FALSE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_by INT
+);
+```
+
+### Features Implemented
+
+1. **Insight Creation Form**
+   - Snapshot selector (dropdown)
+   - Statement textarea (10-1000 characters)
+   - Severity level (Normal/Perhatian/Kritis)
+   - Metrics involved (multi-select checkboxes)
+   - Actionable flag (checkbox)
+   - Validation with error messages
+
+2. **Insight List View**
+   - Card-based layout
+   - Severity badges (color-coded)
+   - Snapshot name display
+   - Metrics badges
+   - Actionable indicator
+   - Edit/Delete buttons
+   - Empty state
+
+3. **Filtering**
+   - By snapshot
+   - By severity (normal/attention/critical)
+   - By actionable status
+   - Real-time filter application
+
+4. **CRUD Operations**
+   - Create insight (POST)
+   - View all insights (GET)
+   - View insight by ID (GET)
+   - Update insight (PUT)
+   - Delete insight (DELETE)
+   - Confirmation dialog for delete
+
+5. **Validation**
+   - Statement: 10-1000 characters
+   - Snapshot: Required
+   - Metrics: At least 1 required
+   - Severity: Must be valid enum value
+
+6. **Localization**
+   - All UI text in Bahasa Indonesia
+   - Date formatting (Indonesian locale)
+   - Error messages in Indonesian
+
+### UI/UX Design
+
+**Severity Color Coding:**
+- **Kritis (Critical)**: Red badge, red border, AlertCircle icon
+- **Perhatian (Attention)**: Yellow badge, yellow border, Info icon
+- **Normal**: Green badge, green border, CheckCircle icon
+
+**Layout:**
+- Gradient header with title
+- Navigation tabs
+- Create button + 3 filter dropdowns
+- Card grid (1 column, full width)
+- Modal dialogs for create/edit
+
+**Responsive Design:**
+- Mobile-friendly form layout
+- Stacked filters on mobile
+- Full-width cards
+
+### Data Flow
+
+```
+User clicks "Buat Wawasan Baru"
+    ↓
+Modal opens with InsightForm
+    ↓
+User fills form (snapshot, statement, severity, metrics, actionable)
+    ↓
+Validation runs
+    ↓
+POST /api/analytics/insights
+    ↓
+InsightService.createInsight()
+    ↓
+Insert into database
+    ↓
+Refresh insights list
+    ↓
+Display new insight card
+```
+
+### API Endpoints
+
+**Create Insight:**
+```
+POST /api/analytics/insights
+Body: {
+  snapshot_id: number,
+  statement: string,
+  severity: 'normal' | 'attention' | 'critical',
+  metrics_involved: string[],
+  is_actionable: boolean
+}
+Response: { success: boolean, data: Insight }
+```
+
+**Get All Insights:**
+```
+GET /api/analytics/insights?snapshotId={id}&severity={level}&isActionable={bool}
+Response: { success: boolean, data: Insight[] }
+```
+
+**Get Insight by ID:**
+```
+GET /api/analytics/insights/{id}
+Response: { success: boolean, data: Insight }
+```
+
+**Update Insight:**
+```
+PUT /api/analytics/insights/{id}
+Body: { statement?, severity?, metrics_involved?, is_actionable? }
+Response: { success: boolean, data: Insight }
+```
+
+**Delete Insight:**
+```
+DELETE /api/analytics/insights/{id}
+Response: { success: boolean }
+```
+
+### Testing Completed
+
+- [x] Create insight with all fields
+- [x] View insights list
+- [x] Filter by snapshot
+- [x] Filter by severity
+- [x] Filter by actionable status
+- [x] Edit insight
+- [x] Delete insight with confirmation
+- [x] Validation errors display
+- [x] Empty state displays
+- [x] Localization correct
+
+### Key Achievements
+
+✅ **Manual Insight System**: Owner can create insights without AI  
+✅ **Metric Linking**: Insights linked to specific metrics  
+✅ **Severity Assignment**: 3-level severity system  
+✅ **Actionable Flag**: Mark insights that need follow-up  
+✅ **Full CRUD**: Complete create, read, update, delete  
+✅ **Filtering**: Multi-dimensional filtering  
+✅ **Validation**: Comprehensive input validation  
+✅ **Localization**: Fully in Bahasa Indonesia
+
+### Next Steps
+
+**Phase 4**: LLM Integration (Gemma 3 4B)
+- Automated insight generation
+- Anomaly detection
+- Pattern recognition
+- Confidence scoring
+- LLM-assisted recommendations
+
+**Phase 5**: Task Management System
+- Link tasks to insights/recommendations
+- Task assignment and tracking
+- Due dates and priorities
+- Status management
+
+### Checkpoint
+
+**Post-Operational Analytics Works Without AI** ✅
+
+The system now has:
+- Data snapshot system
+- Metric calculation engine
+- Analytics dashboard UI
+- Manual insight creation
+
+All working without LLM integration. The Owner can:
+1. Create snapshots of operational data
+2. View calculated metrics with variance
+3. Manually write insights based on metrics
+4. Filter and manage insights
+
+Ready for Phase 4 (LLM Integration) to add automated insight generation!
+
+---
+
+**Last Updated**: 2026-01-25  
+**Current Phase**: 3.4 (COMPLETE)  
+**Next Milestone**: Phase 4 - LLM Integration (Gemma 3 4B)
