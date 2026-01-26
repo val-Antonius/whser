@@ -401,7 +401,7 @@ export async function calculateInventoryVariance(
         `SELECT 
             i.item_name,
             SUM(soi.system_qty) as expected_qty,
-            SUM(soi.physical_qty) as actual_qty
+            SUM(soi.actual_qty) as actual_qty
          FROM stock_opname_items soi
          JOIN stock_opnames so ON soi.opname_id = so.id
          JOIN inventory_items i ON soi.inventory_item_id = i.id

@@ -19,11 +19,13 @@ interface InsightCardProps {
         metrics_involved: string[];
         is_actionable: boolean;
         created_at: string;
+        generated_by?: 'manual' | 'llm' | 'rule-based';
     };
     snapshotName?: string;
     onEdit?: (id: number) => void;
     onDelete?: (id: number) => void;
     onClick?: (id: number) => void;
+    onCreateTask?: (insight: any) => void;
 }
 
 const METRIC_LABELS: Record<string, string> = {
@@ -37,13 +39,21 @@ const METRIC_LABELS: Record<string, string> = {
     'capacity_utilization': 'Capacity Utilization'
 };
 
+const SOURCE_LABELS: Record<string, string> = {
+    'manual': 'Manual',
+    'llm': '🤖 AI Gen',
+    'rule-based': '⚙️ Auto'
+};
+
 export function InsightCard({
     insight,
     snapshotName,
     onEdit,
     onDelete,
-    onClick
+    onClick,
+    onCreateTask
 }: InsightCardProps) {
+    // ... existing severity config ...
     const getSeverityConfig = () => {
         switch (insight.severity) {
             case 'critical':
@@ -95,6 +105,12 @@ export function InsightCard({
                         <Badge className={config.badge}>
                             {config.label}
                         </Badge>
+                        {/* Source Tag */}
+                        {insight.generated_by && insight.generated_by !== 'manual' && (
+                            <Badge variant="secondary" className="bg-purple-50 text-purple-700 border-purple-200">
+                                {SOURCE_LABELS[insight.generated_by] || insight.generated_by}
+                            </Badge>
+                        )}
                     </div>
                     <span className="text-sm text-gray-500">
                         {formatDate(insight.created_at)}
@@ -132,6 +148,19 @@ export function InsightCard({
 
                         {/* Action Buttons */}
                         <div className="flex gap-2">
+                            {onCreateTask && insight.is_actionable && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onCreateTask(insight);
+                                    }}
+                                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
+                                >
+                                    <span className="mr-1">+</span> Tugas
+                                </Button>
+                            )}
                             {onEdit && (
                                 <Button
                                     variant="ghost"

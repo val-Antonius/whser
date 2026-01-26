@@ -3,8 +3,8 @@
 // ============================================================================
 // OWNER INSIGHTS PAGE
 // ============================================================================
-// Purpose: Manual insight creation and management
-// Phase: 3.4 - Manual Insight Creation
+// Purpose: Manual insight creation and management, plus AI generation
+// Phase: 4.6 - AI UI Integration
 // ============================================================================
 
 import { useEffect, useState } from 'react';
@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { UserRole } from '@/types';
 import { InsightCard } from '@/components/analytics/InsightCard';
 import { InsightForm } from '@/components/analytics/InsightForm';
+import { TaskForm } from '@/components/tasks/TaskForm';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -28,7 +29,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Plus, Filter } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 interface Snapshot {
     id: number;
@@ -45,6 +46,7 @@ interface Insight {
     metrics_involved: string[];
     is_actionable: boolean;
     created_at: string;
+    generated_by: 'manual' | 'llm' | 'rule-based';
 }
 
 export default function OwnerInsights() {
@@ -64,6 +66,10 @@ export default function OwnerInsights() {
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [editingInsight, setEditingInsight] = useState<Insight | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Task Dialog
+    const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
+    const [selectedInsightForTask, setSelectedInsightForTask] = useState<Insight | null>(null);
 
     useEffect(() => {
         const userRole = sessionStorage.getItem('userRole');
@@ -146,6 +152,39 @@ export default function OwnerInsights() {
         }
     };
 
+    const handleGenerateAI = async () => {
+        if (selectedSnapshot === 'all') {
+            alert('Silakan pilih Snapshot terlebih dahulu untuk analisis AI.');
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const selectedSnapshotObj = snapshots.find(s => s.id === parseInt(selectedSnapshot));
+            const response = await fetch('/api/analytics/insights/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    snapshotId: parseInt(selectedSnapshot),
+                    period: selectedSnapshotObj?.period_start
+                })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                await fetchInsights();
+                alert(`Analisis Selesai! Ditambahkan ${result.data?.length || 0} wawasan (${result.source}).`);
+            } else {
+                alert('Gagal menghasilkan wawasan: ' + result.error);
+            }
+        } catch (error) {
+            console.error('AI Generation error:', error);
+            alert('Terjadi kesalahan saat menghubungi layanan AI.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const handleEditInsight = async (data: any) => {
         if (!editingInsight) return;
 
@@ -202,6 +241,40 @@ export default function OwnerInsights() {
         if (insight) {
             setEditingInsight(insight);
             setIsEditDialogOpen(true);
+        }
+    };
+
+    // Task Management Handlers
+    const handleCreateTask = (insight: Insight) => {
+        setSelectedInsightForTask(insight);
+        setIsTaskDialogOpen(true);
+    };
+
+    const submitTask = async (data: any) => {
+        setIsSubmitting(true);
+        try {
+            const response = await fetch('/api/tasks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ...data,
+                    created_by: 1, // Mock User ID (Owner)
+                })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                setIsTaskDialogOpen(false);
+                setSelectedInsightForTask(null);
+                alert('Tugas berhasil dibuat!');
+            } else {
+                alert('Gagal membuat tugas: ' + result.error);
+            }
+        } catch (error) {
+            console.error('Error creating task:', error);
+            alert('Terjadi kesalahan saat membuat tugas');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -286,13 +359,25 @@ export default function OwnerInsights() {
                 {/* Actions & Filters */}
                 <div className="bg-white rounded-lg shadow p-6 mb-8">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                        <Button
-                            onClick={() => setIsCreateDialogOpen(true)}
-                            className="gap-2"
-                        >
-                            <Plus className="h-4 w-4" />
-                            Buat Wawasan Baru
-                        </Button>
+                        <div className="flex gap-2">
+                            <Button
+                                onClick={() => setIsCreateDialogOpen(true)}
+                                className="gap-2"
+                            >
+                                <Plus className="h-4 w-4" />
+                                Tulisan Manual
+                            </Button>
+                            <Button
+                                onClick={handleGenerateAI}
+                                variant="secondary"
+                                className="gap-2 bg-gradient-to-r from-purple-100 to-blue-50 text-purple-700 border border-purple-200 hover:from-purple-200 hover:to-blue-100"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                                    <path fillRule="evenodd" d="M9 4.5a.75.75 0 01.721.544l.813 2.846a3.75 3.75 0 002.576 2.576l2.846.813a.75.75 0 010 1.442l-2.846.813a3.75 3.75 0 00-2.576 2.576l-.813 2.846a.75.75 0 01-1.442 0l-.813-2.846a3.75 3.75 0 00-2.576-2.576l-2.846-.813a.75.75 0 010-1.442l2.846-.813a3.75 3.75 0 002.576-2.576l.813-2.846A.75.75 0 019 4.5zM9 15a.75.75 0 01.75.75v1.5h1.5a.75.75 0 010 1.5h-1.5v1.5a.75.75 0 01-1.5 0v-1.5h-1.5a.75.75 0 010-1.5h1.5v-1.5A.75.75 0 019 15z" clipRule="evenodd" />
+                                </svg>
+                                Analisis AI
+                            </Button>
+                        </div>
 
                         <div className="flex gap-3">
                             <Select value={selectedSnapshot} onValueChange={setSelectedSnapshot}>
@@ -361,6 +446,7 @@ export default function OwnerInsights() {
                                     snapshotName={snapshot?.snapshot_name}
                                     onEdit={openEditDialog}
                                     onDelete={handleDeleteInsight}
+                                    onCreateTask={handleCreateTask}
                                 />
                             );
                         })}
@@ -403,6 +489,30 @@ export default function OwnerInsights() {
                             onCancel={() => {
                                 setIsEditDialogOpen(false);
                                 setEditingInsight(null);
+                            }}
+                            isLoading={isSubmitting}
+                        />
+                    )}
+                </DialogContent>
+            </Dialog>
+
+            {/* Task Dialog */}
+            <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
+                <DialogContent className="max-w-xl">
+                    <DialogHeader>
+                        <DialogTitle>Buat Tugas Baru</DialogTitle>
+                        <DialogDescription>
+                            Buat tugas aksi lanjut berdasarkan wawasan ini
+                        </DialogDescription>
+                    </DialogHeader>
+                    {selectedInsightForTask && (
+                        <TaskForm
+                            insightId={selectedInsightForTask.id}
+                            initialTitle={`Tindak Lanjut: ${selectedInsightForTask.statement.substring(0, 50)}...`}
+                            onSubmit={submitTask}
+                            onCancel={() => {
+                                setIsTaskDialogOpen(false);
+                                setSelectedInsightForTask(null);
                             }}
                             isLoading={isSubmitting}
                         />

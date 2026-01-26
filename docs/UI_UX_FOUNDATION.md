@@ -34,20 +34,6 @@
 - Create consistent page header component
 - Setup sidebar navigation (persistent)
 
-**Pattern to establish**:
-tsx// Global Layout Pattern
-<AppLayout role="admin">
-  <Breadcrumb path={['Dashboard', 'POS', 'New Order']} />
-  <PageHeader 
-    title="Create Order"
-    backButton={true}
-    actions={[...]}
-  />
-  <PageContent>
-    {children}
-  </PageContent>
-</AppLayout>
-
 **Deliverable**: Navigation system that is consistent
 
 #### Sub-Phase 2.5.3: Component Refactoring

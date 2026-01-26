@@ -36,6 +36,7 @@ export function Sidebar({ className }: SidebarProps) {
         { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
         { name: 'POS', href: '/admin/pos', icon: ShoppingCart },
         { name: 'Orders', href: '/admin/orders', icon: Shirt },
+        { name: 'Tasks', href: '/admin/tasks', icon: FileText },
         { name: 'Service Management', href: '/admin/services', icon: Shirt },
         { name: 'Inventory', href: '/admin/inventory', icon: Package },
         { name: 'Customers', href: '/admin/customers', icon: Users },
@@ -66,7 +67,9 @@ export function Sidebar({ className }: SidebarProps) {
 
             <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
                 {navigation.map((item) => {
-                    const isActive = pathname.startsWith(item.href);
+                    // Match if pathname starts with href, but handle root paths carefully if needed
+                    // For /admin/tasks, it matches /admin/tasks/1 etc.
+                    const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
                     return (
                         <Link
                             key={item.name}
