@@ -28,8 +28,8 @@ export async function GET(request: Request) {
             [startDate, endDate]
         );
 
-        const totalRewashes = rewashData.reduce((sum: number, r: any) => sum + r.total_rewashes, 0);
-        const totalCostImpact = rewashData.reduce((sum: number, r: any) => sum + (r.total_cost_impact || 0), 0);
+        const totalRewashes = rewashData.reduce((sum: number, r: any) => sum + Number(r.total_rewashes), 0);
+        const totalCostImpact = rewashData.reduce((sum: number, r: any) => sum + Number(r.total_cost_impact || 0), 0);
         const totalOrders = orderData[0]?.total_orders || 0;
         const rewashRate = totalOrders > 0 ? (totalRewashes / totalOrders) * 100 : 0;
 

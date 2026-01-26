@@ -315,70 +315,9 @@ export default function AdminDashboard() {
                             </div>
                         </div>
 
-                        {/* Module Cards */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <Link href="/admin/pos" className="block group">
-                                <div className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border-2 border-transparent group-hover:border-blue-500">
-                                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                                        <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                        </svg>
-                                    </div>
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">POS / Transaction</h3>
-                                    <p className="text-sm text-gray-600">Create orders, process payments, and manage transactions</p>
-                                </div>
-                            </Link>
-
-                            <Link href="/admin/orders" className="block group">
-                                <div className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border-2 border-transparent group-hover:border-blue-500">
-                                    <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
-                                        <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                        </svg>
-                                    </div>
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Orders List</h3>
-                                    <p className="text-sm text-gray-600">View all orders, filter by status, and track progress</p>
-                                </div>
-                            </Link>
-
-                            <Link href="/admin/services" className="block group">
-                                <div className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border-2 border-transparent group-hover:border-blue-500">
-                                    <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                                        <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                                        </svg>
-                                    </div>
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Service Management</h3>
-                                    <p className="text-sm text-gray-600">Track order workflow, update status, and manage processes</p>
-                                </div>
-                            </Link>
-
-                            <Link href="/admin/inventory" className="block group">
-                                <div className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border-2 border-transparent group-hover:border-blue-500">
-                                    <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-4">
-                                        <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                                        </svg>
-                                    </div>
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Inventory Management</h3>
-                                    <p className="text-sm text-gray-600">Monitor stock levels, record transactions, and track consumption</p>
-                                </div>
-                            </Link>
-
-                            <Link href="/admin/customers" className="block group">
-                                <div className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border-2 border-transparent group-hover:border-blue-500">
-                                    <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                                        <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                                        </svg>
-                                    </div>
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Customer Management</h3>
-                                    <p className="text-sm text-gray-600">View customer profiles, history, and manage preferences</p>
-                                </div>
-                            </Link>
-                        </div>
                     </>
                 ) : (
+
                     /* OPERATIONAL METRICS CONTENT */
                     <OperationalMetricsContent />
                 )}

@@ -24,8 +24,8 @@ export async function GET(request: Request) {
         );
 
         // Calculate overall metrics
-        const totalOrders = results.reduce((sum: number, r: any) => sum + r.total_orders, 0);
-        const onTimeOrders = results.reduce((sum: number, r: any) => sum + r.on_time_orders, 0);
+        const totalOrders = results.reduce((sum: number, r: any) => sum + Number(r.total_orders), 0);
+        const onTimeOrders = results.reduce((sum: number, r: any) => sum + Number(r.on_time_orders), 0);
         const complianceRate = totalOrders > 0 ? (onTimeOrders / totalOrders) * 100 : 0;
 
         // Calculate per-service breakdown

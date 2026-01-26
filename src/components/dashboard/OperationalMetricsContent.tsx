@@ -110,6 +110,7 @@ export function OperationalMetricsContent() {
                         title="Tingkat Kepatuhan SLA"
                         value={`${metrics.sla.overall.compliance_rate}%`}
                         subtitle={`${metrics.sla.overall.on_time_orders} / ${metrics.sla.overall.total_orders} pesanan tepat waktu`}
+                        info="Persentase pesanan yang selesai sebelum estimasi waktu (SLA)."
                         colorScheme={metrics.sla.overall.compliance_rate >= 90 ? 'green' : metrics.sla.overall.compliance_rate >= 75 ? 'yellow' : 'red'}
                         icon={<span className="text-2xl">✓</span>}
                     />
@@ -121,6 +122,7 @@ export function OperationalMetricsContent() {
                         title="Tingkat Cuci Ulang"
                         value={`${metrics.rewash.overall.rewash_rate}%`}
                         subtitle={`${metrics.rewash.overall.total_rewashes} cuci ulang • Rp ${metrics.rewash.overall.total_cost_impact.toLocaleString('id-ID')} biaya`}
+                        info="Persentase pesanan yang harus dicuci ulang karena komplain/internal quality."
                         colorScheme={metrics.rewash.overall.rewash_rate <= 2 ? 'green' : metrics.rewash.overall.rewash_rate <= 5 ? 'yellow' : 'red'}
                         icon={<span className="text-2xl">↻</span>}
                     />
@@ -132,6 +134,7 @@ export function OperationalMetricsContent() {
                         title="Tingkat Keluhan"
                         value={`${metrics.complaints.overall.complaint_rate}%`}
                         subtitle={`${metrics.complaints.overall.total_complaints} keluhan`}
+                        info="Rasio jumlah komplain pelanggan terhadap total pesanan."
                         trend={{
                             direction: metrics.complaints.overall.trend_direction === 'increasing' ? 'up' :
                                 metrics.complaints.overall.trend_direction === 'decreasing' ? 'down' : 'neutral',
@@ -148,7 +151,15 @@ export function OperationalMetricsContent() {
                 {/* Productivity Metrics */}
                 {metrics.productivity && (
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Indikator Produktivitas</h3>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                            Indikator Produktivitas
+                            <div className="relative group">
+                                <span className="cursor-help text-xs bg-gray-200 text-gray-600 rounded-full w-4 h-4 flex items-center justify-center">i</span>
+                                <div className="absolute left-0 bottom-full mb-2 w-48 bg-gray-800 text-white text-xs p-2 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                    Metrik efisiensi operasional harian.
+                                </div>
+                            </div>
+                        </h3>
                         <div className="space-y-4">
                             <div className="flex justify-between items-center p-3 bg-blue-50 rounded">
                                 <span className="text-sm font-medium text-gray-700">Pesanan per Hari</span>
@@ -189,21 +200,25 @@ export function OperationalMetricsContent() {
                     <MetricCard
                         title="Total Pendapatan"
                         value={`Rp ${metrics.margin.overall.total_revenue.toLocaleString('id-ID')}`}
+                        info="Total tagihan (estimated price) dari pesanan selesai."
                         colorScheme="blue"
                     />
                     <MetricCard
                         title="Biaya Inventori"
                         value={`Rp ${metrics.margin.overall.total_inventory_cost.toLocaleString('id-ID')}`}
+                        info="Estimasi biaya deterjen/parfum (belum diimplementasi penuh)."
                         colorScheme="yellow"
                     />
                     <MetricCard
                         title="Margin Kontribusi"
                         value={`Rp ${metrics.margin.overall.contribution_margin.toLocaleString('id-ID')}`}
+                        info="Pendapatan dikurangi biaya langsung (inventori)."
                         colorScheme="green"
                     />
                     <MetricCard
                         title="Margin %"
                         value={`${metrics.margin.overall.margin_percentage}%`}
+                        info="Persentase keuntungan operasional kotor."
                         colorScheme={metrics.margin.overall.margin_percentage >= 70 ? 'green' : metrics.margin.overall.margin_percentage >= 50 ? 'yellow' : 'red'}
                     />
                 </div>

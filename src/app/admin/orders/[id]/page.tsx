@@ -11,6 +11,7 @@ import { ExceptionDialog } from '@/components/orders/ExceptionDialog';
 import { ExceptionCard } from '@/components/orders/ExceptionCard';
 import { OrderStatus } from '@/types';
 import RewashModal from '@/components/service/RewashModal';
+import { ProcessJobList } from '@/components/orders/ProcessJobList';
 
 interface PaymentTransaction {
     id: number;
@@ -254,6 +255,12 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
                     {/* Action Buttons */}
                     <div className="flex gap-2">
+                        <button
+                            onClick={() => window.open(`/admin/orders/${id}/print`, '_blank')}
+                            className="px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
+                        >
+                            <span className="text-lg">🖨️</span> Print
+                        </button>
                         {getNextStatusButton()}
                         {canRecordPayment && (
                             <button
@@ -364,6 +371,11 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                                 </div>
                             )}
                         </div>
+
+                        {/* [NEW] Workflow Process List */}
+                        {order.processJobs && order.processJobs.length > 0 && (
+                            <ProcessJobList jobs={order.processJobs} />
+                        )}
 
                         {/* Exceptions */}
                         <div className="bg-white rounded-lg shadow-sm p-6">

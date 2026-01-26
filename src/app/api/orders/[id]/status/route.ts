@@ -8,6 +8,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query, transaction } from '@/lib/db';
 import { OrderStatus, ApiResponse } from '@/types';
 import { InventoryService } from '@/lib/services/inventory-service';
+import { BlueprintService } from '@/lib/services/blueprint-service';
+import { CustomerService } from '@/lib/services/customer-service';
 
 /**
  * PATCH /api/orders/[id]/status
@@ -81,12 +83,20 @@ export async function PATCH(
                 [orderId, previousStatus, new_status, changed_by, notes || null]
             );
 
+            // [NEW] Sync Job Status (e.g. mark 'Washing' as in_progress)
+            await BlueprintService.syncJobStatus(orderId, new_status, conn);
+
             // Update actual completion time if completing
-            if (new_status === OrderStatus.COMPLETED && !currentOrder.actual_completion) {
-                await conn.execute(
-                    'UPDATE orders SET actual_completion = CURRENT_TIMESTAMP WHERE id = ?',
-                    [orderId]
-                );
+            if (new_status === OrderStatus.COMPLETED) {
+                if (!currentOrder.actual_completion) {
+                    await conn.execute(
+                        'UPDATE orders SET actual_completion = CURRENT_TIMESTAMP WHERE id = ?',
+                        [orderId]
+                    );
+                }
+
+                // [NEW] Check for Loyalty Upgrade
+                await CustomerService.checkAndUpgradeSegment(currentOrder.customer_id, conn);
             }
         });
 

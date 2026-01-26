@@ -14,6 +14,7 @@ import {
     UnitType,
     ApiResponse
 } from '@/types';
+import { BlueprintService } from '@/lib/services/blueprint-service';
 
 /**
  * GET /api/orders
@@ -215,6 +216,9 @@ export async function POST(request: NextRequest) {
                     ]
                 );
             }
+
+            // [NEW] Decompose Order into Jobs
+            await BlueprintService.decomposeOrder(orderId, service_id, conn);
 
             return orderId;
         });

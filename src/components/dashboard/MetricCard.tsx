@@ -11,6 +11,7 @@ interface MetricCardProps {
         value: string;
     };
     icon?: ReactNode;
+    info?: string;
     colorScheme?: 'blue' | 'green' | 'yellow' | 'red' | 'purple';
 }
 
@@ -20,6 +21,7 @@ export default function MetricCard({
     subtitle,
     trend,
     icon,
+    info,
     colorScheme = 'blue'
 }: MetricCardProps) {
     const colorClasses = {
@@ -51,9 +53,21 @@ export default function MetricCard({
     };
 
     return (
-        <div className={`rounded-lg border-2 p-6 ${colorClasses[colorScheme]}`}>
+        <div className={`rounded-lg border-2 p-6 ${colorClasses[colorScheme]} relative group/card`}>
             <div className="flex justify-between items-start mb-2">
-                <h3 className="text-sm font-medium text-gray-600 uppercase tracking-wide">{title}</h3>
+                <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-medium text-gray-600 uppercase tracking-wide">{title}</h3>
+                    {info && (
+                        <div className="relative group/info">
+                            <span className="cursor-help text-xs bg-gray-200 text-gray-600 rounded-full w-4 h-4 flex items-center justify-center">i</span>
+                            <div className="absolute left-0 bottom-full mb-2 w-48 bg-gray-800 text-white text-xs p-2 rounded shadow-lg opacity-0 group-hover/info:opacity-100 transition-opacity pointer-events-none z-10">
+                                {info}
+                                {/* Arrow */}
+                                <div className="absolute top-full left-2 -mt-1 border-4 border-transparent border-t-gray-800"></div>
+                            </div>
+                        </div>
+                    )}
+                </div>
                 {icon && <div className={`${iconColorClasses[colorScheme]}`}>{icon}</div>}
             </div>
 
