@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 
+import { TaskService, CreateTaskInput } from '@/services/TaskService';
+
 export async function POST(req: Request) {
     try {
         const body = await req.json();
@@ -13,7 +15,8 @@ export async function POST(req: Request) {
             assigned_to,
             created_by,
             priority,
-            due_date
+            due_date,
+            metrics_involved
         } = body;
 
         // Validation
@@ -24,25 +27,23 @@ export async function POST(req: Request) {
             );
         }
 
-        const [result] = await pool.query<ResultSetHeader>(`
-            INSERT INTO tasks (
-                title, description, insight_id, recommendation_id, 
-                assigned_to, created_by, priority, due_date, status, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'open', NOW())
-        `, [
+        const input: CreateTaskInput = {
             title,
-            description || null,
-            insight_id || null,
-            recommendation_id || null,
+            description,
             assigned_to,
+            priority: priority || 'medium',
+            due_date: due_date || undefined,
             created_by,
-            priority || 'medium',
-            due_date || null
-        ]);
+            insight_id,
+            recommendation_id,
+            metrics_involved
+        };
+
+        const result = await TaskService.createTask(input);
 
         return NextResponse.json({
             success: true,
-            data: { id: result.insertId, ...body }
+            data: result
         });
 
     } catch (error: any) {

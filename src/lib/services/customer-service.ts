@@ -59,4 +59,52 @@ export class CustomerService {
             // Don't throw, as this is a background side-effect
         }
     }
+    /**
+     * Award loyalty points to a customer based on order value.
+     * Default rule: 1 point per 1000 IDR.
+     */
+    static async awardPoints(customerId: number, orderId: number, amountPaid: number, connection?: any) {
+        const execQuery = connection ?
+            (sql: string, params: any[]) => connection.execute(sql, params) :
+            (sql: string, params: any[]) => query(sql, params);
+
+        try {
+            // Rule: 1 Point per 1,000 IDR
+            const points = Math.floor(amountPaid / 1000);
+
+            if (points <= 0) return;
+
+            console.log(`Awarding ${points} points to Customer #${customerId} for Order #${orderId}`);
+
+            // 1. Insert History Record
+            await execQuery(
+                `INSERT INTO customer_loyalty_history 
+                 (customer_id, order_id, change_type, points_earned, description, new_tier)
+                 VALUES (?, ?, 'Order', ?, ?, NULL)`,
+                [
+                    customerId,
+                    orderId,
+                    points,
+                    `Points earned from Order #${orderId}`
+                ]
+            );
+
+            // 2. Update Customer Balance (Legacy field if exists, or just rely on history?)
+            // The schema has total_lifetime_value, but maybe not a direct 'points_balance' column yet?
+            // Phase 2.4 Specs mentioned total_lifetime_value. Let's update that at least.
+
+            await execQuery(
+                `UPDATE customers 
+                 SET total_lifetime_value = total_lifetime_value + ? 
+                 WHERE id = ?`,
+                [amountPaid, customerId]
+            );
+
+            // 3. Trigger Tier Upgrade Check
+            await this.checkAndUpgradeSegment(customerId, connection);
+
+        } catch (error) {
+            console.error('Error in awardPoints:', error);
+        }
+    }
 }

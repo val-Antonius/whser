@@ -103,9 +103,9 @@ export function MetricCard({
 
     return (
         <Card
-            className={`cursor-pointer transition-all hover:shadow-lg ${significanceLevel === 'critical' ? 'border-red-300' :
-                significanceLevel === 'attention' ? 'border-yellow-300' :
-                    'border-gray-200'
+            className={`cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg bg-white/90 backdrop-blur border-none ring-1 ring-inset ${significanceLevel === 'critical' ? 'ring-red-200/50 shadow-red-100' :
+                significanceLevel === 'attention' ? 'ring-yellow-200/50 shadow-yellow-100' :
+                    'ring-indigo-50 shadow-indigo-100/50'
                 }`}
             onClick={onClick}
         >
@@ -120,7 +120,7 @@ export function MetricCard({
             <CardContent>
                 <div className="space-y-3">
                     {/* Main Value */}
-                    <div className="text-3xl font-bold text-gray-900">
+                    <div className="text-3xl font-bold text-indigo-950 tracking-tight">
                         {numericValue.toFixed(1)}{unit}
                     </div>
 

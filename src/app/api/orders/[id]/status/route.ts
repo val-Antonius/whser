@@ -10,6 +10,7 @@ import { OrderStatus, ApiResponse } from '@/types';
 import { InventoryService } from '@/lib/services/inventory-service';
 import { BlueprintService } from '@/lib/services/blueprint-service';
 import { CustomerService } from '@/lib/services/customer-service';
+import { SLAWatcher } from '@/lib/services/sla-watcher';
 
 /**
  * PATCH /api/orders/[id]/status
@@ -96,8 +97,21 @@ export async function PATCH(
                 }
 
                 // [NEW] Check for Loyalty Upgrade
-                await CustomerService.checkAndUpgradeSegment(currentOrder.customer_id, conn);
+                // await CustomerService.checkAndUpgradeSegment(currentOrder.customer_id, conn);
+
+                // [NEW] Award Points & Update Lifetime Value
+                // Verify paid_amount is available/accurate. If 'payment_status' is paid, use price.
+                // Or better, query the actual payments? For MVP, we assume fully paid or use 'price'.
+                // Let's use 'paid_amount' from orders table if it exists, otherwise price.
+                // Actually the currentOrder query only fetched * from orders.
+
+                const amountToAward = parseFloat(currentOrder.paid_amount || currentOrder.price || 0);
+                await CustomerService.awardPoints(currentOrder.customer_id, orderId, amountToAward, conn);
             }
+
+            // [NEW] Check SLA Status
+            // Whenever status updates, we re-evaluate SLA status (e.g. if it moved too slow)
+            await SLAWatcher.checkOrderSLA(orderId, conn);
         });
 
         // Fetch updated order

@@ -95,18 +95,31 @@ export default function OwnerTasks() {
 
     const checkEffectiveness = async (id: number) => {
         try {
-            const response = await fetch(`/api/tasks/${id}/effectiveness`);
+            // First check if already calculated
+            // In a real app, this data might come with the task list, but fetching fresh is fine
+
+            // Trigger calculation
+            const response = await fetch('/api/analytics/tasks/effectiveness', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ task_id: id })
+            });
+
             const result = await response.json();
 
             if (result.success && result.data) {
-                const { metric_name, origin_value, comparison_value, comparison_snapshot_name } = result.data;
-                if (comparison_value !== null) {
-                    alert(`Analisis Efektivitas:\n\nMetrik: ${metric_name}\nNilai Awal: ${origin_value}\nNilai Terbaru (${comparison_snapshot_name}): ${comparison_value}\n\nPerubahan: ${(comparison_value - origin_value).toFixed(2)}`);
-                } else {
-                    alert('Belum ada snapshot baru untuk membandingkan hasil.');
-                }
+                const { metric_name, before_value, after_value, percentage_change, is_effective } = result.data;
+
+                alert(
+                    `📊 Analisis Dampak Tugas\n\n` +
+                    `Metrik: ${metric_name}\n` +
+                    `Sebelum: ${before_value}\n` +
+                    `Sesudah: ${after_value}\n\n` +
+                    `Perubahan: ${percentage_change}% ${percentage_change > 0 ? '📈' : '📉'}\n` +
+                    `Status: ${is_effective ? 'EFEKTIF ✅' : 'TIDAK EFEKTIF ⚠️'}`
+                );
             } else {
-                alert(result.message || 'Gagal mengecek efektivitas');
+                alert(result.error || 'Gagal menghitung efektivitas');
             }
         } catch (error) {
             console.error('Error checking effectiveness:', error);

@@ -17,7 +17,7 @@ import {
     DialogTitle,
     DialogFooter,
 } from '@/components/ui/dialog';
-import { X, Plus, Trash2 } from 'lucide-react';
+import { X, Plus, Trash2, Beaker, Info, Save } from 'lucide-react';
 
 interface RecipeItem {
     inventory_item_id: string;
@@ -87,7 +87,6 @@ export default function ServiceRecipeDialog({
             const res = await fetch(`/api/inventory/consumption-templates?service_id=${svcId}`);
             const data = await res.json();
             if (data.templates && Array.isArray(data.templates)) {
-                // Map existing templates to UI items
                 const mappedItems = data.templates.map((t: any) => ({
                     inventory_item_id: t.inventory_item_id.toString(),
                     estimated_quantity: t.estimated_quantity.toString(),
@@ -127,13 +126,11 @@ export default function ServiceRecipeDialog({
             return;
         }
 
-        // Filter out incomplete rows
         const validItems = items.filter(
             item => item.inventory_item_id && item.estimated_quantity && item.unit
         );
 
         if (validItems.length === 0 && items.length > 0) {
-            // If user entered rows but they are incomplete
             setError('Mohon lengkapi data item sebelum menyimpan');
             return;
         }
@@ -171,23 +168,31 @@ export default function ServiceRecipeDialog({
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>Kelola Resep Layanan</DialogTitle>
+            <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-hidden flex flex-col p-0 bg-white/90 backdrop-blur-xl border-white/60 shadow-2xl rounded-3xl">
+                <DialogHeader className="px-8 pt-8 pb-4 shrink-0">
+                    <DialogTitle className="text-2xl font-light text-slate-800 flex items-center gap-3">
+                        <div className="p-2 bg-emerald-50 rounded-xl border border-emerald-100">
+                            <Beaker className="h-6 w-6 text-emerald-500" />
+                        </div>
+                        Kelola Resep Layanan
+                    </DialogTitle>
                 </DialogHeader>
 
-                <div className="space-y-6 py-4">
+                <div className="flex-1 overflow-y-auto px-8 pb-4 space-y-6 scrollbar-hide">
                     {/* Service Selector */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">Layanan Target</label>
+                    <div className="bg-white/50 p-6 rounded-2xl border border-white/60 shadow-sm space-y-3">
+                        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400">
+                            <Info className="w-3.5 h-3.5" />
+                            Layanan Target
+                        </div>
                         <Select
                             value={serviceId}
                             onValueChange={(val) => setServiceId(val)}
                         >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Pilih Layanan..." />
+                            <SelectTrigger className="w-full bg-white/80 border-slate-200 rounded-xl h-12 text-slate-700 outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">
+                                <SelectValue placeholder="Pilih Layanan untuk diedit..." />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="rounded-xl border-slate-200 shadow-xl">
                                 {services.map(s => (
                                     <SelectItem key={s.id} value={s.id.toString()}>
                                         {s.service_name}
@@ -195,112 +200,132 @@ export default function ServiceRecipeDialog({
                                 ))}
                             </SelectContent>
                         </Select>
-                        <p className="text-xs text-gray-500">
-                            Pilih layanan untuk melihat atau mengedit resepnya.
+                        <p className="text-[10px] text-slate-500 italic px-1">
+                            Resep yang Anda buat akan otomatis digunakan untuk menghitung penggunaan stok setiap kali layanan ini dipesan.
                         </p>
                     </div>
 
                     {/* Recipe Items List */}
-                    {serviceId && (
+                    {serviceId ? (
                         <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                                <h3 className="text-sm font-semibold">Komposisi Bahan</h3>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
+                            <div className="flex justify-between items-center px-1">
+                                <h3 className="text-sm font-semibold text-slate-700">Komposisi Bahan Baku</h3>
+                                <button
                                     onClick={addItemRow}
-                                    className="h-8"
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-full text-xs font-bold hover:bg-emerald-100 transition-all active:scale-95 border border-emerald-100"
                                 >
-                                    <Plus className="w-4 h-4 mr-1" /> Tambah Bahan
-                                </Button>
+                                    <Plus className="w-3.5 h-3.5" /> Tambah Bahan
+                                </button>
                             </div>
 
                             <div className="space-y-3">
                                 {items.length === 0 && (
-                                    <div className="text-center py-4 text-gray-500 bg-gray-50 rounded border border-dashed">
-                                        Belum ada bahan. Klik "Tambah Bahan" untuk memulai.
+                                    <div className="text-center py-12 text-slate-400 bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-100">
+                                        <Beaker className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                                        <p className="text-sm">Belum ada bahan baku. Klik "Tambah Bahan" untuk memulai.</p>
                                     </div>
                                 )}
 
                                 {items.map((item, index) => (
-                                    <div key={index} className="flex gap-3 items-end p-3 bg-gray-50 rounded border">
-                                        <div className="flex-1 space-y-1">
-                                            <label className="text-xs font-medium">Barang</label>
+                                    <div key={index} className="group flex flex-col md:flex-row gap-4 items-start md:items-end p-5 bg-white/60 hover:bg-white/80 backdrop-blur-sm rounded-2xl border border-white/60 shadow-sm transition-all animate-in fade-in slide-in-from-top-2">
+                                        <div className="flex-[2] w-full space-y-2">
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Nama Barang / Produk</label>
                                             <Select
                                                 value={item.inventory_item_id}
                                                 onValueChange={(val) => updateItem(index, 'inventory_item_id', val)}
                                             >
-                                                <SelectTrigger className="h-9 bg-white">
-                                                    <SelectValue placeholder="Pilih Barang" />
+                                                <SelectTrigger className="h-11 bg-white/80 border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20">
+                                                    <SelectValue placeholder="Pilih Produk..." />
                                                 </SelectTrigger>
-                                                <SelectContent>
+                                                <SelectContent className="rounded-xl border-slate-200 shadow-xl max-h-64">
                                                     {inventoryItems.map(i => (
                                                         <SelectItem key={i.id} value={i.id.toString()}>
-                                                            {i.item_name} ({i.item_code})
+                                                            <div className="flex flex-col py-0.5">
+                                                                <span className="font-medium text-slate-800">{i.item_name}</span>
+                                                                <span className="text-[10px] text-slate-500">Code: {i.item_code} | Stok: {i.stock} {i.unit}</span>
+                                                            </div>
                                                         </SelectItem>
                                                     ))}
                                                 </SelectContent>
                                             </Select>
                                         </div>
 
-                                        <div className="w-24 space-y-1">
-                                            <label className="text-xs font-medium">Jumlah</label>
-                                            <Input
-                                                type="number"
-                                                value={item.estimated_quantity}
-                                                onChange={(e) => updateItem(index, 'estimated_quantity', e.target.value)}
-                                                className="h-9 bg-white"
-                                                placeholder="0.00"
-                                            />
-                                        </div>
+                                        <div className="flex flex-row gap-3 w-full md:w-auto">
+                                            <div className="flex-1 md:w-28 space-y-2">
+                                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Jumlah</label>
+                                                <Input
+                                                    type="number"
+                                                    value={item.estimated_quantity}
+                                                    onChange={(e) => updateItem(index, 'estimated_quantity', e.target.value)}
+                                                    className="h-11 bg-white/80 border-slate-200 rounded-xl text-center focus:ring-2 focus:ring-emerald-500/20"
+                                                    placeholder="0.00"
+                                                />
+                                            </div>
 
-                                        <div className="w-32 space-y-1">
-                                            <label className="text-xs font-medium">Satuan</label>
-                                            <Select
-                                                value={item.unit}
-                                                onValueChange={(val) => updateItem(index, 'unit', val)}
+                                            <div className="flex-1 md:w-36 space-y-2">
+                                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Takaran</label>
+                                                <Select
+                                                    value={item.unit}
+                                                    onValueChange={(val) => updateItem(index, 'unit', val)}
+                                                >
+                                                    <SelectTrigger className="h-11 bg-white/80 border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="rounded-xl border-slate-200">
+                                                        <SelectItem value="per_kg">Per Kg</SelectItem>
+                                                        <SelectItem value="per_pc">Per Pcs</SelectItem>
+                                                        <SelectItem value="per_order">Per Order</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => removeItemRow(index)}
+                                                className="mt-8 flex items-center justify-center h-11 w-11 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl border border-transparent hover:border-rose-100 transition-all active:scale-90"
                                             >
-                                                <SelectTrigger className="h-9 bg-white">
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="per_kg">Per Kg</SelectItem>
-                                                    <SelectItem value="per_pc">Per Pcs</SelectItem>
-                                                    <SelectItem value="per_order">Per Order</SelectItem>
-                                                </SelectContent>
-                                            </Select>
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
                                         </div>
-
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => removeItemRow(index)}
-                                            className="h-9 w-9 text-red-500 hover:text-red-700 hover:bg-red-50"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </Button>
                                     </div>
                                 ))}
                             </div>
                         </div>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center py-16 text-slate-400 gap-4 opacity-50">
+                            <Info className="w-12 h-12 stroke-[1px]" />
+                            <p className="text-sm font-light">Silakan pilih layanan di atas untuk mengelola resep.</p>
+                        </div>
                     )}
 
                     {error && (
-                        <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+                        <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-700 text-xs flex items-center gap-2 animate-in fade-in slide-in-from-top-1">
+                            <X className="w-4 h-4 shrink-0" />
                             {error}
                         </div>
                     )}
                 </div>
 
-                <DialogFooter>
-                    <Button variant="outline" onClick={onClose} disabled={loading}>
+                <DialogFooter className="px-8 py-6 bg-slate-50/50 border-t border-white/60 gap-3 shrink-0">
+                    <button
+                        onClick={onClose}
+                        disabled={loading}
+                        className="flex-1 px-6 py-3 border border-slate-200 rounded-full text-slate-600 font-semibold hover:bg-white/80 transition-all active:scale-95 text-sm"
+                    >
                         Batal
-                    </Button>
-                    <Button onClick={handleSubmit} disabled={loading || !serviceId} className="bg-blue-600 hover:bg-blue-700">
-                        {loading ? 'Menyimpan...' : 'Simpan Resep'}
-                    </Button>
+                    </button>
+                    <button
+                        onClick={handleSubmit}
+                        disabled={loading || !serviceId}
+                        className="flex-[2] px-6 py-3 bg-emerald-500 text-white rounded-full font-semibold hover:bg-emerald-600 shadow-lg shadow-emerald-500/30 transition-all active:scale-95 disabled:opacity-50 text-sm flex items-center justify-center gap-2"
+                    >
+                        {loading ? (
+                            <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                        ) : (
+                            <Save className="w-4 h-4" />
+                        )}
+                        <span>{loading ? 'Menyimpan...' : 'Simpan Resep'}</span>
+                    </button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Lightbulb, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { RecommendationList } from '@/components/analytics/RecommendationList';
+import { CreateRecommendationDialog } from '@/components/analytics/CreateRecommendationDialog';
 
 export default function OwnerRecommendationsPage() {
     const router = useRouter();
@@ -38,6 +39,25 @@ export default function OwnerRecommendationsPage() {
 
     const handleStatusUpdate = async (id: number, status: string) => {
         try {
+            // If accepting, create a task first
+            if (status === 'accepted') {
+                const taskRes = await fetch('/api/analytics/tasks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        from_recommendation: true,
+                        recommendation_id: id,
+                        created_by: 1 // Default owner user
+                    })
+                });
+
+                if (!taskRes.ok) {
+                    console.error('Failed to create task from recommendation');
+                    // Optional: Show error to user
+                    return;
+                }
+            }
+
             const response = await fetch(`/api/analytics/recommendations/${id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
@@ -85,10 +105,49 @@ export default function OwnerRecommendationsPage() {
 
             {/* Content */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="flex justify-end mb-6">
-                    <Button className="gap-2">
-                        <Plus className="h-4 w-4" /> Buat Rekomendasi Manual
+                <div className="flex justify-end mb-6 gap-2">
+                    <Button
+                        variant="secondary"
+                        onClick={async () => {
+                            setLoading(true);
+                            try {
+                                // 1. Fetch latest snapshot
+                                const snapRes = await fetch('/api/analytics/snapshots');
+                                const snapData = await snapRes.json();
+
+                                if (!snapData.success || !snapData.data || snapData.data.length === 0) {
+                                    alert('Tidak ada snapshot data ditemukan. Silakan buat snapshot di halaman Analitik.');
+                                    setLoading(false);
+                                    return;
+                                }
+
+                                // Assume sorted by date desc or id desc
+                                const latestSnapshotId = snapData.data[0].id; // First item is usually latest
+
+                                // 2. Generate Recommendations
+                                const res = await fetch('/api/analytics/recommendations/generate', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ snapshotId: latestSnapshotId })
+                                });
+                                const result = await res.json();
+                                if (result.success) {
+                                    alert(result.message);
+                                    fetchRecommendations();
+                                } else {
+                                    alert('Gagal: ' + result.error);
+                                }
+                            } catch (e) {
+                                alert('Error connecting to AI');
+                            } finally {
+                                setLoading(false);
+                            }
+                        }}
+                        className="bg-purple-100 text-purple-700 hover:bg-purple-200"
+                    >
+                        ✨ Analisis AI
                     </Button>
+                    <CreateRecommendationDialog onRecommendationCreated={fetchRecommendations} />
                 </div>
 
                 {loading ? (

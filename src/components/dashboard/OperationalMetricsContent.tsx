@@ -66,10 +66,10 @@ export function OperationalMetricsContent() {
     if (isLoading) {
         return (
             <div className="animate-pulse space-y-4">
-                <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+                <div className="h-8 bg-white/50 rounded w-1/4 backdrop-blur-sm"></div>
                 <div className="grid grid-cols-3 gap-4">
                     {[1, 2, 3, 4, 5, 6].map(i => (
-                        <div key={i} className="h-32 bg-gray-200 rounded"></div>
+                        <div key={i} className="h-32 bg-white/50 rounded-xl backdrop-blur-sm"></div>
                     ))}
                 </div>
             </div>
@@ -79,24 +79,25 @@ export function OperationalMetricsContent() {
     return (
         <div>
             {/* Date Range Selector */}
-            <div className="flex gap-3 items-center mb-6 justify-end">
-                <label className="text-sm font-medium text-gray-700">Periode:</label>
+            <div className="flex gap-3 items-center mb-6 justify-end bg-white/40 backdrop-blur-md p-4 rounded-xl border border-white/50 shadow-sm">
+                <label className="text-sm font-medium text-slate-700">Periode:</label>
                 <input
                     type="date"
                     value={dateRange.start_date}
                     onChange={(e) => setDateRange({ ...dateRange, start_date: e.target.value })}
-                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    className="px-3 py-2 border border-white/60 bg-white/50 rounded-lg text-sm text-slate-700 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none transition-all"
                 />
-                <span className="text-gray-500">s/d</span>
+                <span className="text-slate-500">s/d</span>
                 <input
                     type="date"
                     value={dateRange.end_date}
                     onChange={(e) => setDateRange({ ...dateRange, end_date: e.target.value })}
-                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    className="px-3 py-2 border border-white/60 bg-white/50 rounded-lg text-sm text-slate-700 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none transition-all"
                 />
                 <Button
                     onClick={fetchAllMetrics}
                     size="sm"
+                    className="bg-sky-500 hover:bg-sky-600 text-white border-0 shadow-md shadow-sky-500/20"
                 >
                     Refresh
                 </Button>
@@ -150,28 +151,28 @@ export function OperationalMetricsContent() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 {/* Productivity Metrics */}
                 {metrics.productivity && (
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/60 shadow-sm p-6">
+                        <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
                             Indikator Produktivitas
                             <div className="relative group">
-                                <span className="cursor-help text-xs bg-gray-200 text-gray-600 rounded-full w-4 h-4 flex items-center justify-center">i</span>
-                                <div className="absolute left-0 bottom-full mb-2 w-48 bg-gray-800 text-white text-xs p-2 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                <span className="cursor-help text-xs bg-white/50 border border-white text-slate-500 rounded-full w-4 h-4 flex items-center justify-center">i</span>
+                                <div className="absolute left-0 bottom-full mb-2 w-48 bg-slate-800 text-white text-xs p-2 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none backdrop-blur-md">
                                     Metrik efisiensi operasional harian.
                                 </div>
                             </div>
                         </h3>
                         <div className="space-y-4">
-                            <div className="flex justify-between items-center p-3 bg-blue-50 rounded">
-                                <span className="text-sm font-medium text-gray-700">Pesanan per Hari</span>
-                                <span className="text-xl font-bold text-blue-900">{metrics.productivity.orders_per_day}</span>
+                            <div className="flex justify-between items-center p-4 bg-sky-50/50 rounded-lg border border-sky-100">
+                                <span className="text-sm font-medium text-slate-700">Pesanan per Hari</span>
+                                <span className="text-xl font-bold text-sky-900">{metrics.productivity.orders_per_day}</span>
                             </div>
-                            <div className="flex justify-between items-center p-3 bg-green-50 rounded">
-                                <span className="text-sm font-medium text-gray-700">Rata-rata Waktu Proses</span>
-                                <span className="text-xl font-bold text-green-900">{metrics.productivity.avg_processing_hours} jam</span>
+                            <div className="flex justify-between items-center p-4 bg-emerald-50/50 rounded-lg border border-emerald-100">
+                                <span className="text-sm font-medium text-slate-700">Rata-rata Waktu Proses</span>
+                                <span className="text-xl font-bold text-emerald-900">{metrics.productivity.avg_processing_hours} jam</span>
                             </div>
-                            <div className="flex justify-between items-center p-3 bg-purple-50 rounded">
-                                <span className="text-sm font-medium text-gray-700">Tingkat Penyelesaian</span>
-                                <span className="text-xl font-bold text-purple-900">{metrics.productivity.job_completion_rate}%</span>
+                            <div className="flex justify-between items-center p-4 bg-violet-50/50 rounded-lg border border-violet-100">
+                                <span className="text-sm font-medium text-slate-700">Tingkat Penyelesaian</span>
+                                <span className="text-xl font-bold text-violet-900">{metrics.productivity.job_completion_rate}%</span>
                             </div>
                         </div>
                     </div>

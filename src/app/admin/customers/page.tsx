@@ -146,7 +146,7 @@ export default function CustomersPage() {
                                     value={statusFilter}
                                     onValueChange={setStatusFilter}
                                 >
-                                    <SelectTrigger>
+                                    <SelectTrigger className="bg-white/50 border-white/50 backdrop-blur-sm">
                                         <SelectValue placeholder="Status" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -166,7 +166,7 @@ export default function CustomersPage() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={fetchCustomers}
-                                className="text-muted-foreground hover:text-foreground"
+                                className="text-muted-foreground hover:text-foreground hover:bg-white/50"
                             >
                                 <RefreshCw className="mr-2 h-3 w-3" />
                                 Refresh Data
@@ -175,7 +175,7 @@ export default function CustomersPage() {
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="bg-white/80 backdrop-blur-xl border-white/50 shadow-sm">
                     <CardContent className="p-0">
                         {isLoading ? (
                             <div className="text-center py-12 text-muted-foreground">Memuat data pelanggan...</div>
@@ -186,7 +186,7 @@ export default function CustomersPage() {
                         ) : (
                             <Table>
                                 <TableHeader>
-                                    <TableRow>
+                                    <TableRow className="hover:bg-slate-50/50">
                                         <TableHead className="pl-6">Pelanggan</TableHead>
                                         <TableHead>Kontak</TableHead>
                                         <TableHead>Segmen</TableHead>
@@ -197,26 +197,26 @@ export default function CustomersPage() {
                                 </TableHeader>
                                 <TableBody>
                                     {filteredCustomers.map((customer) => (
-                                        <TableRow key={customer.id}>
+                                        <TableRow key={customer.id} className="hover:bg-sky-50/30 transition-colors">
                                             <TableCell className="pl-6">
                                                 <div className="flex items-center gap-3">
-                                                    <Avatar className="h-9 w-9 bg-primary/10">
-                                                        <AvatarFallback className="text-primary font-semibold">
+                                                    <Avatar className="h-9 w-9 bg-gradient-to-br from-sky-100 to-blue-200 border-2 border-white ring-1 ring-sky-100">
+                                                        <AvatarFallback className="text-sky-700 font-semibold bg-transparent">
                                                             {customer.name.charAt(0).toUpperCase()}
                                                         </AvatarFallback>
                                                     </Avatar>
                                                     <div>
-                                                        <div className="font-medium text-foreground">{customer.name}</div>
-                                                        <div className="text-xs text-muted-foreground">{customer.customer_number}</div>
+                                                        <div className="font-medium text-slate-900">{customer.name}</div>
+                                                        <div className="text-xs text-slate-500">{customer.customer_number}</div>
                                                     </div>
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                <div className="text-sm">{customer.phone || '-'}</div>
-                                                <div className="text-xs text-muted-foreground">{customer.email || 'Tidak ada email'}</div>
+                                                <div className="text-sm text-slate-700">{customer.phone || '-'}</div>
+                                                <div className="text-xs text-slate-400">{customer.email || 'Tidak ada email'}</div>
                                             </TableCell>
                                             <TableCell>
-                                                <Badge variant="outline" className={`capitalize font-normal ${getSegmentColor(customer.segment)} bg-opacity-20`}>
+                                                <Badge variant="outline" className={`capitalize font-normal border-0 ${getSegmentColor(customer.segment)}`}>
                                                     {customer.segment}
                                                 </Badge>
                                             </TableCell>

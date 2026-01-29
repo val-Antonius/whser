@@ -120,87 +120,91 @@ export default function OrdersListPage() {
                     </Link>
                 </div>
 
-                {/* Summary Cards */}
+                {/* Summary Cards - Glass Style */}
                 <div className="grid grid-cols-4 gap-4 mb-6">
                     <Card>
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm text-muted-foreground">Jatuh Tempo Hari Ini</CardTitle>
+                            <CardTitle className="text-sm font-medium text-slate-500">Jatuh Tempo Hari Ini</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{stats.dueToday}</div>
+                            <div className="text-3xl font-light text-slate-800">{stats.dueToday}</div>
                         </CardContent>
                     </Card>
-                    <Card className="border-red-200 bg-red-50">
+                    <Card className="bg-red-50/50 border-red-100">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm text-red-700">Terlambat</CardTitle>
+                            <CardTitle className="text-sm font-medium text-red-600">Terlambat</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-red-700">{stats.overdue}</div>
+                            <div className="text-3xl font-light text-red-700">{stats.overdue}</div>
                         </CardContent>
                     </Card>
-                    <Card className="border-orange-200 bg-orange-50">
+                    <Card className="bg-sky-50/50 border-sky-100">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm text-orange-700">Express</CardTitle>
+                            <CardTitle className="text-sm font-medium text-sky-600">Express</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-orange-700">{stats.express}</div>
+                            <div className="text-3xl font-light text-sky-700">{stats.express}</div>
                         </CardContent>
                     </Card>
-                    <Card className="border-yellow-200 bg-yellow-50">
+                    <Card className="bg-amber-50/50 border-amber-100">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm text-yellow-700">Mendekati Deadline</CardTitle>
+                            <CardTitle className="text-sm font-medium text-amber-600">Mendekati Deadline</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-yellow-700">{stats.approaching}</div>
+                            <div className="text-3xl font-light text-amber-700">{stats.approaching}</div>
                         </CardContent>
                     </Card>
                 </div>
 
-                {/* Quick Filters */}
-                <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+                {/* Quick Filters - Clean Pills */}
+                <div className="bg-white/60 backdrop-blur-md rounded-xl border border-white/50 p-4 mb-6 shadow-sm">
                     <div className="flex gap-2 items-center flex-wrap">
-                        <span className="text-sm font-medium text-gray-700 mr-2">Filter Cepat:</span>
+                        <span className="text-sm font-medium text-slate-500 mr-2">Filter:</span>
                         <Button
-                            variant={quickFilter === 'all' ? 'default' : 'outline'}
+                            variant={quickFilter === 'all' ? 'secondary' : 'ghost'}
                             size="sm"
                             onClick={() => setQuickFilter('all')}
+                            className={quickFilter === 'all' ? "bg-slate-200 text-slate-800" : "text-slate-500"}
                         >
                             Semua ({orders.length})
                         </Button>
                         <Button
-                            variant={quickFilter === 'due_today' ? 'default' : 'outline'}
+                            variant={quickFilter === 'due_today' ? 'secondary' : 'ghost'}
                             size="sm"
                             onClick={() => setQuickFilter('due_today')}
+                            className={quickFilter === 'due_today' ? "bg-blue-100 text-blue-700" : "text-slate-500"}
                         >
-                            Jatuh Tempo Hari Ini ({stats.dueToday})
+                            Hari Ini ({stats.dueToday})
                         </Button>
                         <Button
-                            variant={quickFilter === 'overdue' ? 'destructive' : 'outline'}
+                            variant={quickFilter === 'overdue' ? 'secondary' : 'ghost'}
                             size="sm"
                             onClick={() => setQuickFilter('overdue')}
+                            className={quickFilter === 'overdue' ? "bg-red-100 text-red-700" : "text-slate-500"}
                         >
-                            🔴 Terlambat ({stats.overdue})
+                            Terlambat ({stats.overdue})
                         </Button>
                         <Button
-                            variant={quickFilter === 'express' ? 'default' : 'outline'}
+                            variant={quickFilter === 'express' ? 'secondary' : 'ghost'}
                             size="sm"
                             onClick={() => setQuickFilter('express')}
-                            className={quickFilter === 'express' ? 'bg-orange-600 hover:bg-orange-700' : ''}
+                            className={quickFilter === 'express' ? "bg-sky-100 text-sky-700" : "text-slate-500"}
                         >
-                            ⚡ Express ({stats.express})
+                            Express ({stats.express})
                         </Button>
                         <Button
-                            variant={quickFilter === 'approaching' ? 'default' : 'outline'}
+                            variant={quickFilter === 'approaching' ? 'secondary' : 'ghost'}
                             size="sm"
                             onClick={() => setQuickFilter('approaching')}
+                            className={quickFilter === 'approaching' ? "bg-amber-100 text-amber-700" : "text-slate-500"}
                         >
-                            🟡 Mendekati ({stats.approaching})
+                            Mendekati ({stats.approaching})
                         </Button>
                         <Button
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
                             onClick={fetchOrders}
-                            className="ml-auto"
+                            className="ml-auto text-slate-400 hover:text-slate-600"
                         >
                             Refresh
                         </Button>
@@ -283,22 +287,22 @@ export default function OrdersListPage() {
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <Link href={`/admin/orders/${order.id}`} className="block">
                                                         {order.priority === 'express' && (
-                                                            <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800">
-                                                                ⚡ Express
+                                                            <span className="px-2 py-0.5 inline-flex text-xs font-medium rounded-full bg-sky-100 text-sky-700 border border-sky-200">
+                                                                Express
                                                             </span>
                                                         )}
                                                     </Link>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <Link href={`/admin/orders/${order.id}`} className="block">
-                                                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.current_status)}`}>
+                                                        <span className={`px-2 py-0.5 inline-flex text-xs font-medium rounded-full ${getStatusColor(order.current_status).replace('text-800', 'text-700').replace('bg-', 'bg-opacity-50 bg-')}`}>
                                                             {formatStatus(order.current_status)}
                                                         </span>
                                                     </Link>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <Link href={`/admin/orders/${order.id}`} className="block">
-                                                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getPaymentColor(order.payment_status)}`}>
+                                                        <span className={`px-2 py-0.5 inline-flex text-xs font-medium rounded-full ${getPaymentColor(order.payment_status).replace('text-800', 'text-700')}`}>
                                                             {formatStatus(order.payment_status)}
                                                         </span>
                                                     </Link>

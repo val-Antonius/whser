@@ -259,6 +259,7 @@ export default function OwnerInsights() {
                 body: JSON.stringify({
                     ...data,
                     created_by: 1, // Mock User ID (Owner)
+                    metrics_involved: selectedInsightForTask ? selectedInsightForTask.metrics_involved : undefined
                 })
             });
 

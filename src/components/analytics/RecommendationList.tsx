@@ -90,7 +90,7 @@ export function RecommendationList({ recommendations, onStatusUpdate }: Recommen
             ) : (
                 <div className="grid gap-4">
                     {filtered.map((rec) => (
-                        <Card key={rec.id} className="hover:shadow-md transition-shadow">
+                        <Card key={rec.id} className="cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg bg-white/90 backdrop-blur border-indigo-50 shadow-indigo-100/50">
                             <CardContent className="p-6">
                                 <div className="flex justify-between items-start gap-4">
                                     <div className="flex-1">
@@ -132,7 +132,7 @@ export function RecommendationList({ recommendations, onStatusUpdate }: Recommen
                                             <>
                                                 <Button
                                                     size="sm"
-                                                    className="w-full bg-blue-600 hover:bg-blue-700"
+                                                    className="w-full bg-indigo-600 hover:bg-indigo-700 shadow-sm shadow-indigo-200"
                                                     onClick={() => onStatusUpdate(rec.id, 'accepted')}
                                                 >
                                                     Setujui
@@ -140,7 +140,7 @@ export function RecommendationList({ recommendations, onStatusUpdate }: Recommen
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
-                                                    className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                    className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 border-red-100"
                                                     onClick={() => onStatusUpdate(rec.id, 'rejected')}
                                                 >
                                                     Tolak

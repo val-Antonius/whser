@@ -1,4 +1,20 @@
-import { query, transaction } from '@/lib/db';
+import { query, queryOne, transaction } from '@/lib/db';
+import { RowDataPacket } from 'mysql2';
+
+interface OrderData extends RowDataPacket {
+    service_id: number;
+    unit_type: string;
+    estimated_weight: string | number; // DECIMAL or FLOAT
+    quantity: number;
+}
+
+interface ServiceMaterial extends RowDataPacket {
+    inventory_item_id: number;
+    estimated_quantity: string | number; // DECIMAL
+    unit: string;
+    item_name: string;
+    current_stock: number;
+}
 
 export class InventoryService {
     /**
@@ -8,7 +24,7 @@ export class InventoryService {
     static async processAutomaticConsumption(orderId: number, userId: number) {
         try {
             // 1. Get Order Details (to know Service & Weight/Qty)
-            const [order] = await query<any>(
+            const order = await queryOne<OrderData>(
                 'SELECT service_id, unit_type, estimated_weight, quantity FROM orders WHERE id = ?',
                 [orderId]
             );
@@ -16,8 +32,8 @@ export class InventoryService {
             if (!order) throw new Error('Order not found');
 
             // 2. Get Service Materials (Recipe)
-            const materials = await query<any>(
-                `SELECT sct.*, ii.item_name, ii.current_stock 
+            const materials = await query<ServiceMaterial>(
+                `SELECT sct.inventory_item_id, sct.estimated_quantity, sct.unit, ii.item_name, ii.current_stock 
                  FROM service_consumption_templates sct
                  JOIN inventory_items ii ON sct.inventory_item_id = ii.id
                  WHERE sct.service_id = ?`,
@@ -36,12 +52,15 @@ export class InventoryService {
 
                     // Calculate Consumption based on Unit Type (using 'unit' field from templates)
                     // Note: Schema uses 'unit' column which stores 'per_kg', 'per_pc', etc.
+                    const matQty = typeof mat.estimated_quantity === 'string' ? parseFloat(mat.estimated_quantity) : mat.estimated_quantity;
+                    const orderWeight = typeof order.estimated_weight === 'string' ? parseFloat(order.estimated_weight) : order.estimated_weight;
+
                     if (mat.unit === 'per_kg') {
-                        consumedQty = parseFloat(mat.estimated_quantity) * (parseFloat(order.estimated_weight) || 0);
+                        consumedQty = matQty * (orderWeight || 0);
                     } else if (mat.unit === 'per_pc') {
-                        consumedQty = parseFloat(mat.estimated_quantity) * (parseInt(order.quantity) || 0);
+                        consumedQty = matQty * (order.quantity || 0);
                     } else if (mat.unit === 'per_order') {
-                        consumedQty = parseFloat(mat.estimated_quantity);
+                        consumedQty = matQty;
                     }
 
                     if (consumedQty > 0) {
@@ -93,6 +112,7 @@ export class InventoryService {
         }
     }
 
+
     /**
      * Process consumption for a Rewash Event
      */
@@ -103,7 +123,7 @@ export class InventoryService {
             // For MVP, we assume rewash uses the same materials as the original service.
 
             // 1. Get Order
-            const [order] = await query<any>(
+            const order = await queryOne<OrderData>(
                 'SELECT service_id, unit_type, estimated_weight, quantity FROM orders WHERE id = ?',
                 [orderId]
             );
@@ -111,8 +131,8 @@ export class InventoryService {
             if (!order) throw new Error('Order not found');
 
             // 2. Get Materials
-            const materials = await query<any>(
-                `SELECT sct.* FROM service_consumption_templates sct WHERE sct.service_id = ?`,
+            const materials = await query<ServiceMaterial>(
+                `SELECT sct.inventory_item_id, sct.estimated_quantity, sct.unit FROM service_consumption_templates sct WHERE sct.service_id = ?`,
                 [order.service_id]
             );
 
@@ -122,9 +142,13 @@ export class InventoryService {
             await transaction(async (conn) => {
                 for (const mat of materials) {
                     let consumedQty = 0;
-                    if (mat.unit === 'per_kg') consumedQty = parseFloat(mat.estimated_quantity) * (parseFloat(order.estimated_weight) || 0);
-                    else if (mat.unit === 'per_pc') consumedQty = parseFloat(mat.estimated_quantity) * (parseInt(order.quantity) || 0);
-                    else if (mat.unit === 'per_order') consumedQty = parseFloat(mat.estimated_quantity);
+
+                    const matQty = typeof mat.estimated_quantity === 'string' ? parseFloat(mat.estimated_quantity) : mat.estimated_quantity;
+                    const orderWeight = typeof order.estimated_weight === 'string' ? parseFloat(order.estimated_weight) : order.estimated_weight;
+
+                    if (mat.unit === 'per_kg') consumedQty = matQty * (orderWeight || 0);
+                    else if (mat.unit === 'per_pc') consumedQty = matQty * (order.quantity || 0);
+                    else if (mat.unit === 'per_order') consumedQty = matQty;
 
                     if (consumedQty > 0) {
                         // Insert Transaction

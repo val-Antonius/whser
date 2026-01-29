@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import pool, { transaction } from '@/lib/db';
 import { RowDataPacket } from 'mysql2';
 import { validateAuthorizationCode } from '@/lib/authorization';
 
@@ -73,36 +73,69 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Get current item cost
-        const [items] = await pool.query<RowDataPacket[]>(
-            'SELECT unit_cost FROM inventory_items WHERE id = ?',
-            [inventory_item_id]
-        );
+        let result: any;
+        let costImpact = 0;
 
-        if (items.length === 0) {
-            return NextResponse.json(
-                { error: 'Inventory item not found' },
-                { status: 404 }
+        await transaction(async (conn) => {
+            // 1. Get current item cost and stock
+            const [items] = await conn.query<RowDataPacket[]>(
+                'SELECT unit_cost, item_name, current_stock FROM inventory_items WHERE id = ? FOR UPDATE',
+                [inventory_item_id]
             );
-        }
 
-        const costImpact = parseFloat(items[0].unit_cost || 0) * parseFloat(quantity);
+            if (items.length === 0) {
+                throw new Error('Inventory item not found');
+            }
 
-        // Insert waste record
-        const [result] = await pool.query(
-            `INSERT INTO inventory_waste 
-            (inventory_item_id, quantity, unit, waste_type, reason, cost_impact, reported_by, authorized_by, authorization_code)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [inventory_item_id, quantity, unit, waste_type, reason, costImpact, 1, 1, authorization_code]
-        );
+            const item = items[0];
+            const qty = parseFloat(quantity);
+            costImpact = parseFloat(item.unit_cost || 0) * qty;
+
+            // 2. Insert waste record
+            const [insertResult] = await conn.query(
+                `INSERT INTO inventory_waste 
+                (inventory_item_id, quantity, unit, waste_type, reason, cost_impact, reported_by, authorized_by, authorization_code)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [inventory_item_id, quantity, unit, waste_type, reason, costImpact, 1, 1, authorization_code]
+            );
+            result = insertResult;
+
+            // 3. Decrement Stock
+            await conn.query(
+                'UPDATE inventory_items SET current_stock = current_stock - ? WHERE id = ?',
+                [quantity, inventory_item_id]
+            );
+
+            // 4. Create Inventory Transaction (Audit)
+            await conn.query(
+                `INSERT INTO inventory_transactions 
+                (inventory_item_id, transaction_type, quantity, unit_cost, notes, created_by)
+                VALUES (?, 'adjustment', ?, ?, ?, ?)`,
+                [
+                    inventory_item_id,
+                    -qty, // Negative quantity for deduction
+                    item.unit_cost,
+                    `WASTE Reporting: ${waste_type} - ${reason}`,
+                    1 // TODO: Use actual user ID
+                ]
+            );
+        });
 
         return NextResponse.json({
             message: 'Waste reported successfully',
             id: (result as any).insertId,
             cost_impact: costImpact
         });
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error reporting waste:', error);
+
+        if (error.message === 'Inventory item not found') {
+            return NextResponse.json(
+                { error: 'Inventory item not found' },
+                { status: 404 }
+            );
+        }
+
         return NextResponse.json(
             { error: 'Failed to report waste' },
             { status: 500 }

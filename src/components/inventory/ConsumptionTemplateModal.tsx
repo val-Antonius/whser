@@ -80,14 +80,47 @@ export default function ConsumptionTemplateModal({
         }
 
         try {
+            // STEP 1: Fetch existing templates for this service to preserve them
+            // The backend API is a "Batch Replace" (Delete All -> Insert New),
+            // so we must include existing items + the new item.
+            const fetchResponse = await fetch(`/api/inventory/consumption-templates?service_id=${serviceId}`);
+            const fetchData = await fetchResponse.json();
+
+            let existingItems: any[] = [];
+            if (fetchData.templates) {
+                // Map existing templates to the format required for POST
+                existingItems = fetchData.templates.map((t: any) => ({
+                    inventory_item_id: t.inventory_item_id,
+                    estimated_quantity: t.estimated_quantity,
+                    unit: t.unit
+                }));
+            }
+
+            // Check if item already exists in template
+            const newItemId = parseInt(inventoryItemId);
+            const isDuplicate = existingItems.some(item => item.inventory_item_id === newItemId);
+
+            if (isDuplicate) {
+                throw new Error('Item ini sudah ada di resep layanan ini. Hapus dulu jika ingin mengubah.');
+            }
+
+            // STEP 2: Add new item to the list
+            const payloadItems = [
+                ...existingItems,
+                {
+                    inventory_item_id: newItemId,
+                    estimated_quantity: parseFloat(estimatedQuantity),
+                    unit: unit
+                }
+            ];
+
+            // STEP 3: Send Batch Update
             const response = await fetch('/api/inventory/consumption-templates', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     service_id: parseInt(serviceId),
-                    inventory_item_id: parseInt(inventoryItemId),
-                    estimated_quantity: parseFloat(estimatedQuantity),
-                    unit // Passes 'per_kg', 'per_pc', etc.
+                    items: payloadItems
                 })
             });
 

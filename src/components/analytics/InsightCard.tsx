@@ -93,7 +93,7 @@ export function InsightCard({
 
     return (
         <Card
-            className={`cursor-pointer transition-all hover:shadow-lg ${config.border}`}
+            className={`cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl border-indigo-100/50 bg-white/80 backdrop-blur-sm shadow-sm hover:border-indigo-200 ${config.border}`}
             onClick={() => onClick?.(insight.id)}
         >
             <CardHeader className="pb-3">

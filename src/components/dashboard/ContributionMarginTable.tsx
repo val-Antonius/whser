@@ -13,41 +13,41 @@ interface ContributionMarginTableProps {
 
 export default function ContributionMarginTable({ data }: ContributionMarginTableProps) {
     return (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div className="p-4 border-b border-gray-100 bg-gray-50">
-                <h3 className="text-lg font-semibold text-gray-900">Contribution Margin by Service</h3>
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/60 shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-white/60 bg-slate-50/50">
+                <h3 className="text-lg font-semibold text-slate-800">Contribution Margin by Service</h3>
             </div>
 
             <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                    <thead className="bg-gray-50 border-b border-gray-200">
+                    <thead className="bg-slate-50/30 border-b border-white/60">
                         <tr>
-                            <th className="px-4 py-3 text-left font-medium text-gray-600">Service</th>
-                            <th className="px-4 py-3 text-right font-medium text-gray-600">Orders</th>
-                            <th className="px-4 py-3 text-right font-medium text-gray-600">Revenue</th>
-                            <th className="px-4 py-3 text-right font-medium text-gray-600">Inv. Cost</th>
-                            <th className="px-4 py-3 text-right font-medium text-gray-600">Margin</th>
-                            <th className="px-4 py-3 text-right font-medium text-gray-600">Margin %</th>
+                            <th className="px-4 py-3 text-left font-medium text-slate-500">Service</th>
+                            <th className="px-4 py-3 text-right font-medium text-slate-500">Orders</th>
+                            <th className="px-4 py-3 text-right font-medium text-slate-500">Revenue</th>
+                            <th className="px-4 py-3 text-right font-medium text-slate-500">Inv. Cost</th>
+                            <th className="px-4 py-3 text-right font-medium text-slate-500">Margin</th>
+                            <th className="px-4 py-3 text-right font-medium text-slate-500">Margin %</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="divide-y divide-white/60">
                         {data.map((service, index) => (
-                            <tr key={index} className="hover:bg-gray-50">
-                                <td className="px-4 py-3 font-medium text-gray-900">{service.service_name}</td>
-                                <td className="px-4 py-3 text-right text-gray-700">{service.order_count}</td>
-                                <td className="px-4 py-3 text-right text-gray-700">
+                            <tr key={index} className="hover:bg-sky-50/30 transition-colors">
+                                <td className="px-4 py-3 font-medium text-slate-900">{service.service_name}</td>
+                                <td className="px-4 py-3 text-right text-slate-600">{service.order_count}</td>
+                                <td className="px-4 py-3 text-right text-slate-600">
                                     Rp {service.total_revenue.toLocaleString('id-ID')}
                                 </td>
-                                <td className="px-4 py-3 text-right text-gray-700">
+                                <td className="px-4 py-3 text-right text-slate-600">
                                     Rp {service.total_inventory_cost.toLocaleString('id-ID')}
                                 </td>
-                                <td className="px-4 py-3 text-right font-semibold text-green-600">
+                                <td className="px-4 py-3 text-right font-semibold text-emerald-600">
                                     Rp {service.contribution_margin.toLocaleString('id-ID')}
                                 </td>
                                 <td className="px-4 py-3 text-right">
-                                    <span className={`font-bold ${service.margin_percentage >= 70 ? 'text-green-600' :
-                                            service.margin_percentage >= 50 ? 'text-yellow-600' :
-                                                'text-red-600'
+                                    <span className={`font-bold ${service.margin_percentage >= 70 ? 'text-emerald-600' :
+                                        service.margin_percentage >= 50 ? 'text-amber-600' :
+                                            'text-rose-600'
                                         }`}>
                                         {service.margin_percentage}%
                                     </span>
